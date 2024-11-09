@@ -154,9 +154,20 @@ class map:
             self.content[tempX][tempY].blockType = blockType_Class.path
         return
 
+class tower_Class:
+    dmg: int
+    offMs: int
+    positionX: int
+    positionY: int
+    def __init__(self, positionXIn: int, positionYIn: int, dmgIn = 1, offMsIn = 300) -> None:
+        self.dmg = dmgIn
+        self.offMs = offMsIn
+        self.positionX = positionXIn
+        self.positionY = positionYIn
+        pass
 
 def main():
-    myMap = map(20,30)
+    myMap = map(20,20)
     myPath = path_Class(0,0)
 
     myPath.pathDirs.append(DirectionType_Class.start)
@@ -166,23 +177,27 @@ def main():
     myPath.pathDirs.append(DirectionType_Class.right)
     myPath.pathDirs.append(DirectionType_Class.right)
     myPath.pathDirs.append(DirectionType_Class.right)
-    myPath.pathDirs.append(DirectionType_Class.down)
-    myPath.pathDirs.append(DirectionType_Class.down)
-    myPath.pathDirs.append(DirectionType_Class.down)
-    myPath.pathDirs.append(DirectionType_Class.left)
-    myPath.pathDirs.append(DirectionType_Class.left)
-    myPath.pathDirs.append(DirectionType_Class.left)
+    myPath.pathDirs.append(DirectionType_Class.up)
+    myPath.pathDirs.append(DirectionType_Class.up)
+    myPath.pathDirs.append(DirectionType_Class.up)
+    myPath.pathDirs.append(DirectionType_Class.right)
+    myPath.pathDirs.append(DirectionType_Class.right)
+    myPath.pathDirs.append(DirectionType_Class.right)
     myPath.pathDirs.append(DirectionType_Class.end)
 
     myMap.applayPath(myPath)
 
-    myETK = etk_class(myPath, speedFactor=0.6)
+    myETK = etk_class(myPath, speedFactor=0.2)
 
     for i in range(150):
         if(myETK.path.pathDirs[myETK.directionsIdx] != DirectionType_Class.end):
             myETK.tick()
-            print(str(round(myETK.positionX,2)) + " ; " + str(round(myETK.positionY,2)))
+            #print(str(round(myETK.positionX,2)) + " ; " + str(round(myETK.positionY,2)))
+            myMap.content[int(round(myETK.positionX,2))][int(round(myETK.positionY,2))].blockType = blockType_Class.path
+        else:
+            myMap.content[int(round(myETK.positionX,2))][int(round(myETK.positionY,2))].blockType = blockType_Class.pathEnd
         continue
+    myMap.content[myPath.startY][myPath.startX].blockType = blockType_Class.pathStart
 
     myMap.printMap()
     return
