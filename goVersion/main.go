@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math"
+	"time"
 )
 
 type play struct {
@@ -38,28 +39,40 @@ func etk_init(positionIn vec2, radiusIn float64, healthIn float64, rewardIn int,
 }
 
 type tower struct {
-	position vec2
-	dmgRange float64
-	dmg      float64
-	price    int
+	position    vec2
+	dmgRange    float64
+	dmg         float64
+	price       int
+	coolDownMax int   //ms to next shoot
+	lastAttack  int64 //ms where last shot happened
 }
 
-func tower_init(positionIn vec2, dmgRangeIn float64, dmgIn float64, priceIn int) tower {
+func tower_init(positionIn vec2, dmgRangeIn float64, dmgIn float64, priceIn int, coolDownMaxIn int) tower {
 	return tower{
-		position: positionIn,
-		dmgRange: dmgRangeIn,
-		dmg:      dmgIn,
-		price:    priceIn,
+		position:    positionIn,
+		dmgRange:    dmgRangeIn,
+		dmg:         dmgIn,
+		price:       priceIn,
+		coolDownMax: coolDownMaxIn,
+		lastAttack:  (time.Now().UnixNano() / 1_000_000),
 	}
 }
 
-func tower_dmgToETKList(towerIn tower, etkList [](*etk)) {
+func tower_dmgToETKList(towerIn *tower, etkList [](*etk)) {
 	for i := 0; i < len(etkList); i++ {
 		disX := math.Abs(towerIn.position.x - etkList[i].position.x)
 		disY := math.Abs(towerIn.position.y - etkList[i].position.y)
-		if math.Sqrt(disX*disX+disY*disY) <= towerIn.dmgRange {
-			etkList[i].health -= towerIn.dmg
-			fmt.Println("hit")
+		if towerIn.lastAttack+int64(towerIn.coolDownMax) <= time.Now().UnixNano()/1_000_000 {
+			if math.Sqrt(disX*disX+disY*disY) <= towerIn.dmgRange {
+				etkList[i].health -= towerIn.dmg
+				fmt.Println("hit")
+				towerIn.lastAttack = time.Now().UnixNano() / 1_000_000
+			}
+		} else {
+			//fmt.Println("#####")
+			//fmt.Println(towerIn.lastAttack + int64(towerIn.coolDownMax))
+			//fmt.Println(time.Now().UnixNano() / 1_000_000)
+			//fmt.Println("#####")
 		}
 	}
 }
@@ -96,12 +109,12 @@ func main() {
 	etkList = append(etkList, &myEtk)
 	etkList = append(etkList, &myEtk2)
 
-	towerList := [](tower){}
+	towerList := [](*tower){}
 
-	towerList1 := tower_init(vec_init(10.0, 9.0), 5.0, 20.0, 10)
-	towerList2 := tower_init(vec_init(10.0, 9.0), 5.0, 20.0, 10)
-	towerList = append(towerList, towerList1)
-	towerList = append(towerList, towerList2)
+	towerList1 := tower_init(vec_init(10.0, 9.0), 5.0, 20.0, 10, 1 /*change ms cool down*/)
+	towerList2 := tower_init(vec_init(10.0, 9.0), 5.0, 20.0, 10, 1 /*change ms cool down*/)
+	towerList = append(towerList, &towerList1)
+	towerList = append(towerList, &towerList2)
 
 	myPath := path_init([]vec2{
 		vec_init(0.0, 0.0),
@@ -116,6 +129,7 @@ func main() {
 		vec_init(45.0, 45.0),
 	})
 
+	time.Sleep(1 * time.Millisecond)
 	for i := 0; i < 1000; i++ {
 		for j := 0; j < len(etkList); j++ {
 			etkList[j].wayPointPerc += 0.1
@@ -180,5 +194,5 @@ Idee:
 
 TODO:
 	restrict tower hit am
-	restrict etk movement
+	restrict etk movement --> delay to 60 ticks/second
 */
