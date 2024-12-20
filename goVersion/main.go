@@ -63,12 +63,16 @@ func tower_dmgToETKList(towerIn *tower, etkList [](*etk)) {
 		disX := math.Abs(towerIn.position.x - etkList[i].position.x)
 		disY := math.Abs(towerIn.position.y - etkList[i].position.y)
 		if towerIn.lastAttack+int64(towerIn.coolDownMax) <= time.Now().UnixNano()/1_000_000 {
-			if math.Sqrt(disX*disX+disY*disY) <= towerIn.dmgRange {
+			if math.Sqrt(disX*disX+disY*disY) <= towerIn.dmgRange && etkList[i].health > 0 {
 				etkList[i].health -= towerIn.dmg
 				fmt.Println("hit")
 				towerIn.lastAttack = time.Now().UnixNano() / 1_000_000
+			} else {
+				//cannot reach
 			}
 		} else {
+			//have to wait
+
 			//fmt.Println("#####")
 			//fmt.Println(towerIn.lastAttack + int64(towerIn.coolDownMax))
 			//fmt.Println(time.Now().UnixNano() / 1_000_000)
@@ -111,8 +115,8 @@ func main() {
 
 	towerList := [](*tower){}
 
-	towerList1 := tower_init(vec_init(10.0, 9.0), 5.0, 20.0, 10, 1 /*change ms cool down*/)
-	towerList2 := tower_init(vec_init(10.0, 9.0), 5.0, 20.0, 10, 1 /*change ms cool down*/)
+	towerList1 := tower_init(vec_init(10.0, 9.0), 5.0, 20.0, 10, 100 /*change ms cool down*/)
+	towerList2 := tower_init(vec_init(10.0, 9.0), 5.0, 20.0, 10, 100 /*change ms cool down*/)
 	towerList = append(towerList, &towerList1)
 	towerList = append(towerList, &towerList2)
 
@@ -130,14 +134,22 @@ func main() {
 	})
 
 	time.Sleep(1 * time.Millisecond)
+
+	//set delta-time to 0
+	var deltaTime float64 = 0.0
 	for i := 0; i < 1000; i++ {
+		timeStart := time.Now().UnixNano() / 1e6
+
+		time.Sleep(10 * time.Millisecond)
+		//takes first time
 		for j := 0; j < len(etkList); j++ {
-			etkList[j].wayPointPerc += 0.1
+			etkList[j].wayPointPerc += 0.1 * deltaTime
 			etk_poisitionFromPath(etkList[j], myPath)
 			//fmt.Print(etkList[j].position.x)
 			//fmt.Print(" ; ")
 			//fmt.Println(etkList[j].position.y)
 		}
+
 		for j := 0; j < len(towerList); j++ {
 			tower_dmgToETKList(towerList[j], etkList)
 		}
@@ -149,6 +161,7 @@ func main() {
 				listToRemove = append(listToRemove, j)
 			}
 		}
+
 		for k := len(listToRemove) - 1; k >= 0; k-- {
 			idx := listToRemove[k]
 			if idx+1 >= len(etkList) {
@@ -158,7 +171,12 @@ func main() {
 			}
 		}
 		//remove etk from list
-		//-> give mone
+		//-> give money
+
+		//take second time
+		timeEnd := time.Now().UnixNano() / 1e6
+		//set delta-time to (second-first)/(1/60)
+		deltaTime = float64(timeEnd-timeStart) / 16.6
 	}
 	return
 }
@@ -195,4 +213,5 @@ Idee:
 TODO:
 	restrict tower hit am
 	restrict etk movement --> delay to 60 ticks/second
+	--> multiply over delta time
 */
