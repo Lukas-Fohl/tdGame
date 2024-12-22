@@ -1,15 +1,15 @@
 package main
 
 import (
-	"fmt"
-	"math"
 	"time"
 )
 
 type play struct {
-	money      int
-	etkMax     int
-	etkCurrent int
+	money         int
+	etkMaxDmg     int
+	etkCurrentDmg int
+	level         int
+	levelMsStart  int64
 }
 
 type vec2 struct {
@@ -20,105 +20,23 @@ func vec_init(xIn float64, yIn float64) vec2 {
 	return vec2{x: xIn, y: yIn}
 }
 
-type etk struct {
-	position     vec2
-	radius       float64
-	health       float64
-	reward       int
-	wayPointPerc float64 //0..100
-}
-
-func etk_init(positionIn vec2, radiusIn float64, healthIn float64, rewardIn int, wayPointPercIn float64) etk {
-	return etk{
-		position:     positionIn,
-		radius:       radiusIn,
-		health:       healthIn,
-		reward:       rewardIn,
-		wayPointPerc: wayPointPercIn,
-	}
-}
-
-type tower struct {
-	position    vec2
-	dmgRange    float64
-	dmg         float64
-	price       int
-	coolDownMax int   //ms to next shoot
-	lastAttack  int64 //ms where last shot happened
-}
-
-func tower_init(positionIn vec2, dmgRangeIn float64, dmgIn float64, priceIn int, coolDownMaxIn int) tower {
-	return tower{
-		position:    positionIn,
-		dmgRange:    dmgRangeIn,
-		dmg:         dmgIn,
-		price:       priceIn,
-		coolDownMax: coolDownMaxIn,
-		lastAttack:  (time.Now().UnixNano() / 1_000_000),
-	}
-}
-
-func tower_dmgToETKList(towerIn *tower, etkList [](*etk)) {
-	for i := 0; i < len(etkList); i++ {
-		disX := math.Abs(towerIn.position.x - etkList[i].position.x)
-		disY := math.Abs(towerIn.position.y - etkList[i].position.y)
-		if towerIn.lastAttack+int64(towerIn.coolDownMax) <= time.Now().UnixNano()/1_000_000 {
-			if math.Sqrt(disX*disX+disY*disY) <= towerIn.dmgRange && etkList[i].health > 0 {
-				etkList[i].health -= towerIn.dmg
-				fmt.Println("hit")
-				towerIn.lastAttack = time.Now().UnixNano() / 1_000_000
-			} else {
-				//cannot reach
-			}
-		} else {
-			//have to wait
-
-			//fmt.Println("#####")
-			//fmt.Println(towerIn.lastAttack + int64(towerIn.coolDownMax))
-			//fmt.Println(time.Now().UnixNano() / 1_000_000)
-			//fmt.Println("#####")
-		}
-	}
-}
-
-type path struct {
-	wayPoint []vec2
-}
-
-func path_init(vecArray []vec2) path {
-	return path{wayPoint: vecArray}
-}
-
-func etk_poisitionFromPath(etkIn *etk, pathIn path) {
-	arrayPoisition := int((etkIn.wayPointPerc / 100.0) * (float64)(len(pathIn.wayPoint)-1))
-	if arrayPoisition < len(pathIn.wayPoint) {
-		vectorMoveX := pathIn.wayPoint[arrayPoisition+1].x - pathIn.wayPoint[arrayPoisition].x
-		vectorMoveY := pathIn.wayPoint[arrayPoisition+1].y - pathIn.wayPoint[arrayPoisition].y
-		vecStepInPerc := 100.0 / (float64)(len(pathIn.wayPoint)-1)
-		currentPercFull := etkIn.wayPointPerc
-		for currentPercFull >= 0 {
-			currentPercFull -= vecStepInPerc
-		}
-		currentPercFull += vecStepInPerc
-		etkIn.position.x = pathIn.wayPoint[arrayPoisition].x + (vectorMoveX * (currentPercFull / vecStepInPerc))
-		etkIn.position.y = pathIn.wayPoint[arrayPoisition].y + (vectorMoveY * (currentPercFull / vecStepInPerc))
-	}
-}
-
 func main() {
-	etkList := [](*etk){}
+	etkList := [](etk){}
+
+	myPlay := play{money: 100, etkMaxDmg: 100, etkCurrentDmg: 0, level: 1, levelMsStart: time.Now().UnixNano() / 1e6}
 
 	myEtk := etk_init(vec_init(0.0, 0.0), 0.0, 1.0, 0.0, 0.0)
 	myEtk2 := etk_init(vec_init(0.0, 0.0), 0.0, 1.0, 0.0, 0.0)
-	etkList = append(etkList, &myEtk)
-	etkList = append(etkList, &myEtk2)
+	etkList = append(etkList, myEtk)
+	etkList = append(etkList, myEtk2)
 
-	towerList := [](*tower){}
+	towerList := [](tower){}
 
-	towerList1 := tower_init(vec_init(10.0, 9.0), 5.0, 20.0, 10, 100 /*change ms cool down*/)
-	towerList2 := tower_init(vec_init(10.0, 9.0), 5.0, 20.0, 10, 100 /*change ms cool down*/)
-	towerList = append(towerList, &towerList1)
-	towerList = append(towerList, &towerList2)
+	towerList1 := tower_init(vec_init(10.0, 9.0), 5.0, 20.0, 10, 100)
+	towerList2 := tower_init(vec_init(10.0, 9.0), 5.0, 20.0, 10, 100)
+
+	towerList = append(towerList, towerList1)
+	towerList = append(towerList, towerList2)
 
 	myPath := path_init([]vec2{
 		vec_init(0.0, 0.0),
@@ -144,14 +62,19 @@ func main() {
 		//takes first time
 		for j := 0; j < len(etkList); j++ {
 			etkList[j].wayPointPerc += 0.1 * deltaTime
-			etk_poisitionFromPath(etkList[j], myPath)
+			(&etkList[j]).poisitionFromPath(myPath)
 			//fmt.Print(etkList[j].position.x)
 			//fmt.Print(" ; ")
 			//fmt.Println(etkList[j].position.y)
 		}
 
+		etkRefList := [](*etk){}
+		for j := 0; j < len(etkList); j++ {
+			etkRefList = append(etkRefList, &etkList[j])
+		}
+
 		for j := 0; j < len(towerList); j++ {
-			tower_dmgToETKList(towerList[j], etkList)
+			(&towerList[j]).dmgToETKList(etkRefList)
 		}
 
 		listToRemove := []int{}
@@ -160,6 +83,14 @@ func main() {
 			if etkList[j].health <= 0.0 || etkList[j].wayPointPerc >= 100.0 {
 				listToRemove = append(listToRemove, j)
 			}
+
+			if etkList[j].health <= 0.0 {
+				myPlay.money += etkList[j].reward
+			}
+			if etkList[j].wayPointPerc >= 100.0 {
+				myPlay.etkCurrentDmg += 1
+			}
+			//check for game end
 		}
 
 		for k := len(listToRemove) - 1; k >= 0; k-- {
@@ -184,6 +115,7 @@ func main() {
 /*
 
 ablauf:
+	check for spawn -- TODO
 	etk
 		tick
 			move
@@ -210,8 +142,43 @@ Idee:
 		liste an punkten
 		--> interpolate
 
+	**NEXT TODO**
+	main loop
+		find smalles orderNum
+		check for level
+			--> next level if not current
+			else start
+		check if stared
+			--> then call getSpawnEtk
+			--> append to etk list
+	delete from list if 0
+
+	idea for level spawn:
+		struct with level
+		type of etk
+		amount
+		interval
+		last spawn
+		--> how to spawn
+			list of spawns
+			iterate over list
+				check for last spawn with interval
+				spawn set last spawn
+				reduce amount
+		add nothing to spawn --> wait
+
+
 TODO:
-	restrict tower hit am
+	restrict tower hit am [x]
 	restrict etk movement --> delay to 60 ticks/second
-	--> multiply over delta time
+	--> multiply over delta time [x]
+	gameplay
+		level-strcuture
+			check if no spawns left for this level && etk list empty --> level++
+		spawn mechanic
+	graphic
+		raylib
+		isometric view
+		--> game to screen position
+		--> screen to game position
 */
