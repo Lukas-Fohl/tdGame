@@ -21,14 +21,23 @@ func vec_init(xIn float64, yIn float64) vec2 {
 }
 
 func main() {
+	spawnList := [](spawn){}
+
+	spawnList = append(spawnList, spawn_init(
+		1,
+		etk_init(vec_init(0.0, 0.0), 0.0, 1.0, 0.0, 0.0),
+		2,
+		2000,
+		0))
+
 	etkList := [](etk){}
 
 	myPlay := play{money: 100, etkMaxDmg: 100, etkCurrentDmg: 0, level: 1, levelMsStart: time.Now().UnixNano() / 1e6}
 
-	myEtk := etk_init(vec_init(0.0, 0.0), 0.0, 1.0, 0.0, 0.0)
-	myEtk2 := etk_init(vec_init(0.0, 0.0), 0.0, 1.0, 0.0, 0.0)
-	etkList = append(etkList, myEtk)
-	etkList = append(etkList, myEtk2)
+	//myEtk := etk_init(vec_init(0.0, 0.0), 0.0, 1.0, 0.0, 0.0)
+	//myEtk2 := etk_init(vec_init(0.0, 0.0), 0.0, 1.0, 0.0, 0.0)
+	//etkList = append(etkList, myEtk)
+	//etkList = append(etkList, myEtk2)
 
 	towerList := [](tower){}
 
@@ -56,10 +65,51 @@ func main() {
 	//set delta-time to 0
 	var deltaTime float64 = 0.0
 	for i := 0; i < 1000; i++ {
+		//takes first time
 		timeStart := time.Now().UnixNano() / 1e6
 
 		time.Sleep(10 * time.Millisecond)
-		//takes first time
+
+		//check if spawns for this level are left
+		hasSpawnWithSameLevel := false
+		for j := 0; j < len(spawnList); j++ {
+			if spawnList[j].amount > 0 && spawnList[j].level == myPlay.level {
+				hasSpawnWithSameLevel = true
+			}
+		}
+		if !hasSpawnWithSameLevel {
+			myPlay.level++
+		}
+
+		//spawn etks
+		smallestSpawnByOrd := &spawn{orderNum: 1024}
+		for j := 0; j < len(spawnList); j++ {
+			if spawnList[j].orderNum < smallestSpawnByOrd.orderNum && spawnList[j].level == myPlay.level && spawnList[j].amount > 0 {
+				smallestSpawnByOrd = &spawnList[j]
+			}
+		}
+
+		etkList = append(etkList, smallestSpawnByOrd.getSpawnEtks()...)
+
+		//remove all spawns with amount 0, level < level
+		spawnToRemove := []int{}
+
+		for j := len(spawnList) - 1; j >= 0; j-- {
+			if spawnList[j].amount <= 0 || spawnList[j].level < myPlay.level {
+				spawnToRemove = append(spawnToRemove, j)
+			}
+		}
+
+		for k := len(spawnToRemove) - 1; k >= 0; k-- {
+			idx := spawnToRemove[k]
+			if idx+1 >= len(spawnList) {
+				spawnList = spawnList[:len(spawnList)-1]
+			} else {
+				spawnList = append(spawnList[:idx], spawnList[idx+1:]...)
+			}
+		}
+
+		//move etks
 		for j := 0; j < len(etkList); j++ {
 			etkList[j].wayPointPerc += 0.1 * deltaTime
 			(&etkList[j]).poisitionFromPath(myPath)
@@ -68,6 +118,7 @@ func main() {
 			//fmt.Println(etkList[j].position.y)
 		}
 
+		//dmg to etks
 		etkRefList := [](*etk){}
 		for j := 0; j < len(etkList); j++ {
 			etkRefList = append(etkRefList, &etkList[j])
@@ -77,6 +128,7 @@ func main() {
 			(&towerList[j]).dmgToETKList(etkRefList)
 		}
 
+		//kill etks
 		listToRemove := []int{}
 
 		for j := len(etkList) - 1; j >= 0; j-- {
