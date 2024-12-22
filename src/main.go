@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -26,8 +27,8 @@ func main() {
 	spawnList = append(spawnList, spawn_init(
 		1,
 		etk_init(vec_init(0.0, 0.0), 0.0, 1.0, 0.0, 0.0),
-		2,
-		2000,
+		50,
+		20,
 		0))
 
 	etkList := [](etk){}
@@ -64,7 +65,9 @@ func main() {
 
 	//set delta-time to 0
 	var deltaTime float64 = 0.0
-	for i := 0; i < 1000; i++ {
+
+	//etk loop - run for all level
+	for i := 0; i < 1_000_000; i++ {
 		//takes first time
 		timeStart := time.Now().UnixNano() / 1e6
 
@@ -77,14 +80,14 @@ func main() {
 				hasSpawnWithSameLevel = true
 			}
 		}
-		if !hasSpawnWithSameLevel {
+		if !hasSpawnWithSameLevel && len(etkList) == 0 {
 			myPlay.level++
 		}
 
 		//spawn etks
 		smallestSpawnByOrd := &spawn{orderNum: 1024}
 		for j := 0; j < len(spawnList); j++ {
-			if spawnList[j].orderNum < smallestSpawnByOrd.orderNum && spawnList[j].level == myPlay.level && spawnList[j].amount > 0 {
+			if spawnList[j].orderNum < smallestSpawnByOrd.orderNum && spawnList[j].level == myPlay.level {
 				smallestSpawnByOrd = &spawnList[j]
 			}
 		}
@@ -95,7 +98,7 @@ func main() {
 		spawnToRemove := []int{}
 
 		for j := len(spawnList) - 1; j >= 0; j-- {
-			if spawnList[j].amount <= 0 || spawnList[j].level < myPlay.level {
+			if (spawnList[j].amount <= 0 || spawnList[j].level < myPlay.level) && len(etkList) == 0 {
 				spawnToRemove = append(spawnToRemove, j)
 			}
 		}
@@ -142,9 +145,9 @@ func main() {
 			if etkList[j].wayPointPerc >= 100.0 {
 				myPlay.etkCurrentDmg += 1
 			}
-			//check for game end
 		}
 
+		//remove etk from list
 		for k := len(listToRemove) - 1; k >= 0; k-- {
 			idx := listToRemove[k]
 			if idx+1 >= len(etkList) {
@@ -153,8 +156,14 @@ func main() {
 				etkList = append(etkList[:idx], etkList[idx+1:]...)
 			}
 		}
-		//remove etk from list
-		//-> give money
+
+		if (len(etkList) == 0 && len(spawnList) == 0) || myPlay.etkCurrentDmg >= myPlay.etkMaxDmg {
+			fmt.Println("ende")
+			if myPlay.etkCurrentDmg >= myPlay.etkMaxDmg {
+				fmt.Println("weil du schlecht bist")
+			}
+			break
+		}
 
 		//take second time
 		timeEnd := time.Now().UnixNano() / 1e6
@@ -194,8 +203,7 @@ Idee:
 		liste an punkten
 		--> interpolate
 
-	**NEXT TODO**
-	main loop
+	spwan loop
 		find smalles orderNum
 		check for level
 			--> next level if not current
@@ -203,10 +211,11 @@ Idee:
 		check if stared
 			--> then call getSpawnEtk
 			--> append to etk list
-	delete from list if 0
+		delete from list if 0
 
 	idea for level spawn:
-		struct with level
+		struct with
+		level
 		type of etk
 		amount
 		interval
@@ -217,7 +226,6 @@ Idee:
 				check for last spawn with interval
 				spawn set last spawn
 				reduce amount
-		add nothing to spawn --> wait
 
 
 TODO:
@@ -225,12 +233,16 @@ TODO:
 	restrict etk movement --> delay to 60 ticks/second
 	--> multiply over delta time [x]
 	gameplay
-		level-strcuture
+		level-strcuture [x]
 			check if no spawns left for this level && etk list empty --> level++
-		spawn mechanic
+		spawn mechanic [x]
 	graphic
 		raylib
 		isometric view
 		--> game to screen position
 		--> screen to game position
+	sanity:
+		inline main loop parts
+		make stop between level:
+			only call functions, etc
 */

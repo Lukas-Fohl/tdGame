@@ -28,7 +28,7 @@ func path_init(vecArray []vec2) path {
 
 func (etkIn *etk) poisitionFromPath(pathIn path) {
 	arrayPoisition := int((etkIn.wayPointPerc / 100.0) * (float64)(len(pathIn.wayPoint)-1))
-	if arrayPoisition < len(pathIn.wayPoint) {
+	if arrayPoisition < len(pathIn.wayPoint)-1 {
 		vectorMoveX := pathIn.wayPoint[arrayPoisition+1].x - pathIn.wayPoint[arrayPoisition].x
 		vectorMoveY := pathIn.wayPoint[arrayPoisition+1].y - pathIn.wayPoint[arrayPoisition].y
 		vecStepInPerc := 100.0 / (float64)(len(pathIn.wayPoint)-1)
