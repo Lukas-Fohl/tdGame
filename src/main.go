@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"time"
+
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 type play struct {
@@ -21,14 +23,108 @@ func vec_init(xIn float64, yIn float64) vec2 {
 	return vec2{x: xIn, y: yIn}
 }
 
+func spawnListHandle(spawnList []spawn, etkList []etk, myPlay play) ([]spawn, []etk, play) {
+	//check if spawns for this level are left
+	hasSpawnWithSameLevel := false
+	for j := 0; j < len(spawnList); j++ {
+		if spawnList[j].amount > 0 && spawnList[j].level == myPlay.level {
+			hasSpawnWithSameLevel = true
+		}
+	}
+	if !hasSpawnWithSameLevel && len(etkList) == 0 {
+		myPlay.level++
+	}
+
+	//spawn etks
+	smallestSpawnByOrd := &spawn{orderNum: 1024}
+	for j := 0; j < len(spawnList); j++ {
+		if spawnList[j].orderNum < smallestSpawnByOrd.orderNum && spawnList[j].level == myPlay.level {
+			smallestSpawnByOrd = &spawnList[j]
+		}
+	}
+
+	etkList = append(etkList, smallestSpawnByOrd.getSpawnEtks()...)
+
+	//remove all spawns with amount 0, level < level
+	spawnToRemove := []int{}
+
+	for j := len(spawnList) - 1; j >= 0; j-- {
+		if (spawnList[j].amount <= 0 || spawnList[j].level < myPlay.level) && len(etkList) == 0 {
+			spawnToRemove = append(spawnToRemove, j)
+		}
+	}
+
+	for k := len(spawnToRemove) - 1; k >= 0; k-- {
+		idx := spawnToRemove[k]
+		if idx+1 >= len(spawnList) {
+			spawnList = spawnList[:len(spawnList)-1]
+		} else {
+			spawnList = append(spawnList[:idx], spawnList[idx+1:]...)
+		}
+	}
+	return spawnList, etkList, myPlay
+}
+
+func etkListHandle(spawnList []spawn, etkList []etk, towerList []tower, myPlay play, deltaTime float64, myPath path) ([]spawn, []etk, []tower, play) {
+	//move etks
+	for j := 0; j < len(etkList); j++ {
+		etkList[j].wayPointPerc += 0.1 * deltaTime
+		(&etkList[j]).poisitionFromPath(myPath)
+		//fmt.Print(etkList[j].position.x)
+		//fmt.Print(" ; ")
+		//fmt.Println(etkList[j].position.y)
+	}
+
+	//dmg to etks
+	etkRefList := [](*etk){}
+	for j := 0; j < len(etkList); j++ {
+		etkRefList = append(etkRefList, &etkList[j])
+	}
+
+	for j := 0; j < len(towerList); j++ {
+		(&towerList[j]).dmgToETKList(etkRefList)
+	}
+
+	//kill etks
+	listToRemove := []int{}
+
+	for j := len(etkList) - 1; j >= 0; j-- {
+		if etkList[j].health <= 0.0 || etkList[j].wayPointPerc >= 100.0 {
+			listToRemove = append(listToRemove, j)
+		}
+
+		if etkList[j].health <= 0.0 {
+			myPlay.money += etkList[j].reward
+		}
+		if etkList[j].wayPointPerc >= 100.0 {
+			myPlay.etkCurrentDmg += 1
+		}
+	}
+
+	//remove etk from list
+	for k := len(listToRemove) - 1; k >= 0; k-- {
+		idx := listToRemove[k]
+		if idx+1 >= len(etkList) {
+			etkList = etkList[:len(etkList)-1]
+		} else {
+			etkList = append(etkList[:idx], etkList[idx+1:]...)
+		}
+	}
+	return spawnList, etkList, towerList, myPlay
+}
+
 func main() {
+	rl.CheckCollisionBoxes(rl.BoundingBox{Min: rl.NewVector3(1, 2, 3), Max: rl.NewVector3(1, 2, 3)}, rl.BoundingBox{Min: rl.NewVector3(1, 2, 3), Max: rl.NewVector3(1, 2, 3)})
+	//rl.InitWindow(800, 450, "raylib [core] example - basic window")
+	//defer rl.CloseWindow()
+
 	spawnList := [](spawn){}
 
 	spawnList = append(spawnList, spawn_init(
 		1,
 		etk_init(vec_init(0.0, 0.0), 0.0, 1.0, 0.0, 0.0),
-		50,
-		20,
+		10,
+		200,
 		0))
 
 	etkList := [](etk){}
@@ -67,95 +163,15 @@ func main() {
 	var deltaTime float64 = 0.0
 
 	//etk loop - run for all level
-	for i := 0; i < 1_000_000; i++ {
+	for {
 		//takes first time
 		timeStart := time.Now().UnixNano() / 1e6
 
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(1 * time.Millisecond)
 
-		//check if spawns for this level are left
-		hasSpawnWithSameLevel := false
-		for j := 0; j < len(spawnList); j++ {
-			if spawnList[j].amount > 0 && spawnList[j].level == myPlay.level {
-				hasSpawnWithSameLevel = true
-			}
-		}
-		if !hasSpawnWithSameLevel && len(etkList) == 0 {
-			myPlay.level++
-		}
+		spawnList, etkList, myPlay = spawnListHandle(spawnList, etkList, myPlay)
 
-		//spawn etks
-		smallestSpawnByOrd := &spawn{orderNum: 1024}
-		for j := 0; j < len(spawnList); j++ {
-			if spawnList[j].orderNum < smallestSpawnByOrd.orderNum && spawnList[j].level == myPlay.level {
-				smallestSpawnByOrd = &spawnList[j]
-			}
-		}
-
-		etkList = append(etkList, smallestSpawnByOrd.getSpawnEtks()...)
-
-		//remove all spawns with amount 0, level < level
-		spawnToRemove := []int{}
-
-		for j := len(spawnList) - 1; j >= 0; j-- {
-			if (spawnList[j].amount <= 0 || spawnList[j].level < myPlay.level) && len(etkList) == 0 {
-				spawnToRemove = append(spawnToRemove, j)
-			}
-		}
-
-		for k := len(spawnToRemove) - 1; k >= 0; k-- {
-			idx := spawnToRemove[k]
-			if idx+1 >= len(spawnList) {
-				spawnList = spawnList[:len(spawnList)-1]
-			} else {
-				spawnList = append(spawnList[:idx], spawnList[idx+1:]...)
-			}
-		}
-
-		//move etks
-		for j := 0; j < len(etkList); j++ {
-			etkList[j].wayPointPerc += 0.1 * deltaTime
-			(&etkList[j]).poisitionFromPath(myPath)
-			//fmt.Print(etkList[j].position.x)
-			//fmt.Print(" ; ")
-			//fmt.Println(etkList[j].position.y)
-		}
-
-		//dmg to etks
-		etkRefList := [](*etk){}
-		for j := 0; j < len(etkList); j++ {
-			etkRefList = append(etkRefList, &etkList[j])
-		}
-
-		for j := 0; j < len(towerList); j++ {
-			(&towerList[j]).dmgToETKList(etkRefList)
-		}
-
-		//kill etks
-		listToRemove := []int{}
-
-		for j := len(etkList) - 1; j >= 0; j-- {
-			if etkList[j].health <= 0.0 || etkList[j].wayPointPerc >= 100.0 {
-				listToRemove = append(listToRemove, j)
-			}
-
-			if etkList[j].health <= 0.0 {
-				myPlay.money += etkList[j].reward
-			}
-			if etkList[j].wayPointPerc >= 100.0 {
-				myPlay.etkCurrentDmg += 1
-			}
-		}
-
-		//remove etk from list
-		for k := len(listToRemove) - 1; k >= 0; k-- {
-			idx := listToRemove[k]
-			if idx+1 >= len(etkList) {
-				etkList = etkList[:len(etkList)-1]
-			} else {
-				etkList = append(etkList[:idx], etkList[idx+1:]...)
-			}
-		}
+		spawnList, etkList, towerList, myPlay = etkListHandle(spawnList, etkList, towerList, myPlay, deltaTime, myPath)
 
 		if (len(etkList) == 0 && len(spawnList) == 0) || myPlay.etkCurrentDmg >= myPlay.etkMaxDmg {
 			fmt.Println("ende")
@@ -242,7 +258,7 @@ TODO:
 		--> game to screen position
 		--> screen to game position
 	sanity:
-		inline main loop parts
+		inline main loop parts [bad idea but works]
 		make stop between level:
 			only call functions, etc
 */
