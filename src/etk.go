@@ -20,6 +20,7 @@ func etk_init(positionIn vec2, radiusIn float64, healthIn float64, rewardIn int,
 
 type path struct {
 	wayPoint []vec2
+	//speed maybe
 }
 
 func path_init(vecArray []vec2) path {

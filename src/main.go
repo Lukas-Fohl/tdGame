@@ -114,17 +114,31 @@ func etkListHandle(spawnList []spawn, etkList []etk, towerList []tower, myPlay p
 }
 
 func main() {
-	rl.CheckCollisionBoxes(rl.BoundingBox{Min: rl.NewVector3(1, 2, 3), Max: rl.NewVector3(1, 2, 3)}, rl.BoundingBox{Min: rl.NewVector3(1, 2, 3), Max: rl.NewVector3(1, 2, 3)})
-	//rl.InitWindow(800, 450, "raylib [core] example - basic window")
-	//defer rl.CloseWindow()
+	screenWidth := int32(1080)
+	screenHeight := int32(720)
+
+	rl.InitWindow(screenWidth, screenHeight, "omtfyb")
+	rl.SetTargetFPS(60)
+	defer rl.CloseWindow()
+	blockImg := rl.LoadImage("block.png")
+	blockTexture := rl.LoadTextureFromImage(blockImg)
+	rl.UnloadImage(blockImg)
+
+	etkImg := rl.LoadImage("etk.png")
+	etkTexture := rl.LoadTextureFromImage(etkImg)
+	rl.UnloadImage(etkImg)
+
+	towerImg := rl.LoadImage("tower.png")
+	towerTexture := rl.LoadTextureFromImage(towerImg)
+	rl.UnloadImage(towerImg)
 
 	spawnList := [](spawn){}
 
 	spawnList = append(spawnList, spawn_init(
 		1,
 		etk_init(vec_init(0.0, 0.0), 0.0, 1.0, 0.0, 0.0),
-		10,
-		200,
+		30,
+		750,
 		0))
 
 	etkList := [](etk){}
@@ -138,8 +152,8 @@ func main() {
 
 	towerList := [](tower){}
 
-	towerList1 := tower_init(vec_init(10.0, 9.0), 5.0, 20.0, 10, 100)
-	towerList2 := tower_init(vec_init(10.0, 9.0), 5.0, 20.0, 10, 100)
+	towerList1 := tower_init(vec_init(11.0, 8.0), 5.0, 20.0, 10, 2500)
+	towerList2 := tower_init(vec_init(8.0, 11.0), 5.0, 20.0, 10, 2500)
 
 	towerList = append(towerList, towerList1)
 	towerList = append(towerList, towerList2)
@@ -147,14 +161,14 @@ func main() {
 	myPath := path_init([]vec2{
 		vec_init(0.0, 0.0),
 		vec_init(5.0, 5.0),
-		vec_init(10.0, 10.0),
+		vec_init(5.0, 10.0),
 		vec_init(15.0, 15.0),
-		vec_init(20.0, 20.0),
+		vec_init(25.0, 20.0),
 		vec_init(25.0, 25.0),
 		vec_init(30.0, 30.0),
-		vec_init(35.0, 35.0),
-		vec_init(40.0, 40.0),
-		vec_init(45.0, 45.0),
+		//vec_init(35.0, 35.0),
+		//vec_init(40.0, 40.0),
+		//vec_init(45.0, 45.0),
 	})
 
 	time.Sleep(1 * time.Millisecond)
@@ -163,18 +177,40 @@ func main() {
 	var deltaTime float64 = 0.0
 
 	//etk loop - run for all level
-	for {
+	for !rl.WindowShouldClose() {
 		//takes first time
 		timeStart := time.Now().UnixNano() / 1e6
 
-		time.Sleep(1 * time.Millisecond)
+		//time.Sleep(10 * time.Millisecond)
 
 		spawnList, etkList, myPlay = spawnListHandle(spawnList, etkList, myPlay)
 
 		spawnList, etkList, towerList, myPlay = etkListHandle(spawnList, etkList, towerList, myPlay, deltaTime, myPath)
 
+		rl.BeginDrawing()
+		rl.ClearBackground(rl.RayWhite)
+		for xDraw := 0; xDraw < 31; xDraw++ {
+			for yDraw := 0; yDraw < 31; yDraw++ {
+				vecOut := gameToScreenVec2(vec_init(float64(xDraw), float64(yDraw)), float64(blockTexture.Width), float64(blockTexture.Height), float64(screenWidth))
+				rl.DrawTexture(blockTexture, int32(vecOut.x), int32(vecOut.y), rl.White)
+			}
+		}
+
+		for i := 0; i < len(towerList); i++ {
+			vecOut := gameToScreenVec2(vec_init(float64(towerList[i].position.x), float64(towerList[i].position.y)), float64(towerTexture.Width), float64(towerTexture.Height), float64(screenWidth))
+			rl.DrawTexture(towerTexture, int32(vecOut.x), int32(vecOut.y), rl.White)
+		}
+
+		for i := 0; i < len(etkList); i++ {
+			vecOut := gameToScreenVec2(vec_init(float64(etkList[i].position.x), float64(etkList[i].position.y)), float64(etkTexture.Width), float64(etkTexture.Height), float64(screenWidth))
+			rl.DrawTexture(etkTexture, int32(vecOut.x), int32(vecOut.y), rl.White)
+		}
+
+		rl.EndDrawing()
+
 		if (len(etkList) == 0 && len(spawnList) == 0) || myPlay.etkCurrentDmg >= myPlay.etkMaxDmg {
 			fmt.Println("ende")
+			fmt.Println(myPlay.etkCurrentDmg)
 			if myPlay.etkCurrentDmg >= myPlay.etkMaxDmg {
 				fmt.Println("weil du schlecht bist")
 			}
@@ -255,10 +291,18 @@ TODO:
 	graphic
 		raylib
 		isometric view
-		--> game to screen position
+		--> game to screen position [x]
 		--> screen to game position
+
+
+		get hits --> save in list
+		--> draw hit for x-ms --> remove from list
+		draw path
+		--> safe as map???
+
 	sanity:
 		inline main loop parts [bad idea but works]
 		make stop between level:
 			only call functions, etc
+		etk speed variable
 */
