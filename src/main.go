@@ -265,6 +265,7 @@ func main() {
 			rl.DrawTexture(etkTexture, int32(vecOut.x), int32(vecOut.y), rl.White)
 		}
 
+		rl.SetLineWidth(3.5)
 		for i := 0; i < len(myPlay.attackList); i++ {
 			if myPlay.attackList[i].startMS+myPlay.attackList[i].duration >= time.Now().UnixNano()/1_000_000 {
 				vecStart := gameToScreenVec2(myPlay.attackList[i].start, float64(etkTexture.Width), float64(etkTexture.Height), float64(screenWidth))
