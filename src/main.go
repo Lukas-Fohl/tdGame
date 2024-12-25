@@ -113,6 +113,33 @@ func etkListHandle(spawnList []spawn, etkList []etk, towerList []tower, myPlay p
 	return spawnList, etkList, towerList, myPlay
 }
 
+func getMapFromPath(pathIn path) [][]uint8 {
+	biggest := vec_init(0, 0)
+	for i := 0; i < len(pathIn.wayPoint); i++ {
+		if pathIn.wayPoint[i].x > biggest.x {
+			biggest.x = pathIn.wayPoint[i].x
+		}
+		if pathIn.wayPoint[i].y > biggest.y {
+			biggest.y = pathIn.wayPoint[i].y
+		}
+	}
+	outMap := [][]uint8{}
+	for y := 0; y < int(biggest.y); y++ {
+		temp := []uint8{}
+		for x := 0; x < int(biggest.x); x++ {
+			temp = append(temp, uint8(0))
+		}
+		outMap = append(outMap, temp)
+	}
+	myEtk := etk_init(vec_init(0.0, 0.0), 0.0, 0.0, 0.0, 0.0)
+	for i := 0; i < 1000; i++ {
+		(&myEtk).poisitionFromPath(pathIn)
+		myEtk.wayPointPerc += 0.1
+		outMap[int(myEtk.position.y)][int(myEtk.position.x)] = 1
+	}
+	return outMap
+}
+
 func main() {
 	screenWidth := int32(1080)
 	screenHeight := int32(720)
@@ -131,6 +158,10 @@ func main() {
 	towerImg := rl.LoadImage("tower.png")
 	towerTexture := rl.LoadTextureFromImage(towerImg)
 	rl.UnloadImage(towerImg)
+
+	floorImg := rl.LoadImage("floor.png")
+	floorTexture := rl.LoadTextureFromImage(floorImg)
+	rl.UnloadImage(floorImg)
 
 	spawnList := [](spawn){}
 
@@ -152,11 +183,11 @@ func main() {
 
 	towerList := [](tower){}
 
-	towerList1 := tower_init(vec_init(11.0, 8.0), 5.0, 20.0, 10, 2500)
-	towerList2 := tower_init(vec_init(8.0, 11.0), 5.0, 20.0, 10, 2500)
+	towerList1 := tower_init(vec_init(8.0, 8.0), 5.0, 20.0, 10, 2500)
+	//towerList2 := tower_init(vec_init(8.0, 11.0), 5.0, 20.0, 10, 2500)
 
 	towerList = append(towerList, towerList1)
-	towerList = append(towerList, towerList2)
+	//towerList = append(towerList, towerList2)
 
 	myPath := path_init([]vec2{
 		vec_init(0.0, 0.0),
@@ -176,6 +207,8 @@ func main() {
 	//set delta-time to 0
 	var deltaTime float64 = 0.0
 
+	myMap := getMapFromPath(myPath)
+
 	//etk loop - run for all level
 	for !rl.WindowShouldClose() {
 		//takes first time
@@ -189,11 +222,25 @@ func main() {
 
 		rl.BeginDrawing()
 		rl.ClearBackground(rl.RayWhite)
-		for xDraw := 0; xDraw < 31; xDraw++ {
-			for yDraw := 0; yDraw < 31; yDraw++ {
+		for xDraw := 0; xDraw < len(myMap[0]); xDraw++ {
+			for yDraw := 0; yDraw < len(myMap); yDraw++ {
 				vecOut := gameToScreenVec2(vec_init(float64(xDraw), float64(yDraw)), float64(blockTexture.Width), float64(blockTexture.Height), float64(screenWidth))
-				rl.DrawTexture(blockTexture, int32(vecOut.x), int32(vecOut.y), rl.White)
+				if myMap[yDraw][xDraw] == 0 {
+					rl.DrawTexture(blockTexture, int32(vecOut.x), int32(vecOut.y), rl.White)
+				} else {
+					rl.DrawTexture(floorTexture, int32(vecOut.x), int32(vecOut.y), rl.White)
+				}
 			}
+		}
+
+		for yDraw := 0; yDraw < len(myMap); yDraw++ {
+			vecOut := gameToScreenVec2(vec_init(float64(len(myMap[0])), float64(yDraw)), float64(blockTexture.Width), float64(blockTexture.Height), float64(screenWidth))
+			rl.DrawTexture(blockTexture, int32(vecOut.x), int32(vecOut.y), rl.White)
+		}
+
+		for xDraw := 0; xDraw <= len(myMap[0]); xDraw++ {
+			vecOut := gameToScreenVec2(vec_init(float64(xDraw), float64(len(myMap))), float64(blockTexture.Width), float64(blockTexture.Height), float64(screenWidth))
+			rl.DrawTexture(blockTexture, int32(vecOut.x), int32(vecOut.y), rl.White)
 		}
 
 		for i := 0; i < len(towerList); i++ {
@@ -297,7 +344,7 @@ TODO:
 
 		get hits --> save in list
 		--> draw hit for x-ms --> remove from list
-		draw path
+		draw path [x]
 		--> safe as map???
 
 	sanity:
