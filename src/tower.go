@@ -26,7 +26,8 @@ func tower_init(positionIn vec2, dmgRangeIn float64, dmgIn float64, priceIn int,
 	}
 }
 
-func (towerIn *tower) dmgToETKList(etkList [](*etk)) {
+func (towerIn *tower) dmgToETKList(etkList [](*etk)) []attack {
+	attackList := []attack{}
 	for i := 0; i < len(etkList); i++ {
 		disX := math.Abs(towerIn.position.x - etkList[i].position.x)
 		disY := math.Abs(towerIn.position.y - etkList[i].position.y)
@@ -36,6 +37,13 @@ func (towerIn *tower) dmgToETKList(etkList [](*etk)) {
 				fmt.Println("hit")
 				towerIn.price = 69420
 				towerIn.lastAttack = time.Now().UnixNano() / 1_000_000
+
+				attackList = append(attackList, attack{
+					startMS:  time.Now().UnixNano() / 1_000_000,
+					duration: 300,
+					start:    towerIn.position,
+					end:      etkList[i].position,
+				})
 			} else {
 				//cannot reach
 			}
@@ -48,4 +56,5 @@ func (towerIn *tower) dmgToETKList(etkList [](*etk)) {
 			//fmt.Println("#####")
 		}
 	}
+	return attackList
 }

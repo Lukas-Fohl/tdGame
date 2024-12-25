@@ -13,6 +13,7 @@ type play struct {
 	etkCurrentDmg int
 	level         int
 	levelMsStart  int64
+	attackList    []attack
 }
 
 type vec2 struct {
@@ -82,7 +83,7 @@ func etkListHandle(spawnList []spawn, etkList []etk, towerList []tower, myPlay p
 	}
 
 	for j := 0; j < len(towerList); j++ {
-		(&towerList[j]).dmgToETKList(etkRefList)
+		myPlay.attackList = append(myPlay.attackList, (&towerList[j]).dmgToETKList(etkRefList)...)
 	}
 
 	//kill etks
@@ -140,6 +141,13 @@ func getMapFromPath(pathIn path) [][]uint8 {
 	return outMap
 }
 
+type attack struct {
+	startMS  int64
+	duration int64
+	start    vec2
+	end      vec2
+}
+
 func main() {
 	screenWidth := int32(1080)
 	screenHeight := int32(720)
@@ -174,7 +182,7 @@ func main() {
 
 	etkList := [](etk){}
 
-	myPlay := play{money: 100, etkMaxDmg: 100, etkCurrentDmg: 0, level: 1, levelMsStart: time.Now().UnixNano() / 1e6}
+	myPlay := play{money: 100, etkMaxDmg: 100, etkCurrentDmg: 0, level: 1, levelMsStart: time.Now().UnixNano() / 1e6, attackList: []attack{}}
 
 	//myEtk := etk_init(vec_init(0.0, 0.0), 0.0, 1.0, 0.0, 0.0)
 	//myEtk2 := etk_init(vec_init(0.0, 0.0), 0.0, 1.0, 0.0, 0.0)
@@ -183,7 +191,7 @@ func main() {
 
 	towerList := [](tower){}
 
-	towerList1 := tower_init(vec_init(8.0, 8.0), 5.0, 20.0, 10, 2500)
+	towerList1 := tower_init(vec_init(8.0, 8.0), 5.0, 20.0, 10, 900)
 	//towerList2 := tower_init(vec_init(8.0, 11.0), 5.0, 20.0, 10, 2500)
 
 	towerList = append(towerList, towerList1)
@@ -221,6 +229,7 @@ func main() {
 		spawnList, etkList, towerList, myPlay = etkListHandle(spawnList, etkList, towerList, myPlay, deltaTime, myPath)
 
 		rl.BeginDrawing()
+
 		rl.ClearBackground(rl.RayWhite)
 		for xDraw := 0; xDraw < len(myMap[0]); xDraw++ {
 			for yDraw := 0; yDraw < len(myMap); yDraw++ {
@@ -243,14 +252,30 @@ func main() {
 			rl.DrawTexture(blockTexture, int32(vecOut.x), int32(vecOut.y), rl.White)
 		}
 
+		tempOut := gameToScreenVec2(vec_init(float64(myPath.wayPoint[len(myPath.wayPoint)-1].x), float64(myPath.wayPoint[len(myPath.wayPoint)-1].y)), float64(floorTexture.Width), float64(floorTexture.Height), float64(screenWidth))
+		rl.DrawTexture(floorTexture, int32(tempOut.x), int32(tempOut.y), rl.White)
+
 		for i := 0; i < len(towerList); i++ {
-			vecOut := gameToScreenVec2(vec_init(float64(towerList[i].position.x), float64(towerList[i].position.y)), float64(towerTexture.Width), float64(towerTexture.Height), float64(screenWidth))
+			vecOut := gameToScreenVec2(towerList[i].position, float64(towerTexture.Width), float64(towerTexture.Height), float64(screenWidth))
 			rl.DrawTexture(towerTexture, int32(vecOut.x), int32(vecOut.y), rl.White)
 		}
 
 		for i := 0; i < len(etkList); i++ {
-			vecOut := gameToScreenVec2(vec_init(float64(etkList[i].position.x), float64(etkList[i].position.y)), float64(etkTexture.Width), float64(etkTexture.Height), float64(screenWidth))
+			vecOut := gameToScreenVec2(etkList[i].position, float64(etkTexture.Width), float64(etkTexture.Height), float64(screenWidth))
 			rl.DrawTexture(etkTexture, int32(vecOut.x), int32(vecOut.y), rl.White)
+		}
+
+		for i := 0; i < len(myPlay.attackList); i++ {
+			if myPlay.attackList[i].startMS+myPlay.attackList[i].duration >= time.Now().UnixNano()/1_000_000 {
+				vecStart := gameToScreenVec2(myPlay.attackList[i].start, float64(etkTexture.Width), float64(etkTexture.Height), float64(screenWidth))
+				vecEnd := gameToScreenVec2(myPlay.attackList[i].end, float64(etkTexture.Width), float64(etkTexture.Height), float64(screenWidth))
+				rl.DrawLine(
+					int32(vecStart.x)+(int32(towerTexture.Width)/2),
+					int32(vecStart.y)+(int32(towerTexture.Height)/4),
+					int32(vecEnd.x)+(int32(etkTexture.Width)/2),
+					int32(vecEnd.y)+(int32(etkTexture.Height)/4),
+					rl.Red)
+			}
 		}
 
 		rl.EndDrawing()
@@ -345,11 +370,16 @@ TODO:
 		get hits --> save in list
 		--> draw hit for x-ms --> remove from list
 		draw path [x]
-		--> safe as map???
+		--> safe as map??? [x]
+		load all textures --> saved in list
+		pop function
+		mid point for texture
+		--> bigger textures
+		scaling
 
 	sanity:
 		inline main loop parts [bad idea but works]
 		make stop between level:
 			only call functions, etc
-		etk speed variable
+		etk speed variable, texture, texture for shot, time for shot
 */
