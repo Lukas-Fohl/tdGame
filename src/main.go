@@ -177,7 +177,7 @@ func main() {
 		1,
 		etk_init(vec_init(0.0, 0.0), 0.0, 1.0, 0.0, 0.0),
 		30,
-		750,
+		400,
 		0))
 
 	etkList := [](etk){}
@@ -192,10 +192,10 @@ func main() {
 	towerList := [](tower){}
 
 	towerList1 := tower_init(vec_init(8.0, 8.0), 5.0, 20.0, 10, 900)
-	//towerList2 := tower_init(vec_init(8.0, 11.0), 5.0, 20.0, 10, 2500)
+	towerList2 := tower_init(vec_init(11.0, 11.0), 5.0, 20.0, 10, 900)
 
 	towerList = append(towerList, towerList1)
-	//towerList = append(towerList, towerList2)
+	towerList = append(towerList, towerList2)
 
 	myPath := path_init([]vec2{
 		vec_init(0.0, 0.0),
@@ -222,7 +222,7 @@ func main() {
 		//takes first time
 		timeStart := time.Now().UnixNano() / 1e6
 
-		//time.Sleep(10 * time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 
 		spawnList, etkList, myPlay = spawnListHandle(spawnList, etkList, myPlay)
 
@@ -266,6 +266,7 @@ func main() {
 		}
 
 		rl.SetLineWidth(3.5)
+		attackRemoveList := []int{}
 		for i := 0; i < len(myPlay.attackList); i++ {
 			if myPlay.attackList[i].startMS+myPlay.attackList[i].duration >= time.Now().UnixNano()/1_000_000 {
 				vecStart := gameToScreenVec2(myPlay.attackList[i].start, float64(etkTexture.Width), float64(etkTexture.Height), float64(screenWidth))
@@ -276,6 +277,17 @@ func main() {
 					int32(vecEnd.x)+(int32(etkTexture.Width)/2),
 					int32(vecEnd.y)+(int32(etkTexture.Height)/4),
 					rl.Red)
+			} else {
+				attackRemoveList = append(attackRemoveList, i)
+			}
+		}
+
+		for k := len(attackRemoveList) - 1; k >= 0; k-- {
+			idx := attackRemoveList[k]
+			if idx+1 >= len(myPlay.attackList) {
+				myPlay.attackList = myPlay.attackList[:len(myPlay.attackList)-1]
+			} else {
+				myPlay.attackList = append(myPlay.attackList[:idx], myPlay.attackList[idx+1:]...)
 			}
 		}
 

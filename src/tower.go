@@ -40,7 +40,7 @@ func (towerIn *tower) dmgToETKList(etkList [](*etk)) []attack {
 
 				attackList = append(attackList, attack{
 					startMS:  time.Now().UnixNano() / 1_000_000,
-					duration: 300,
+					duration: 250,
 					start:    towerIn.position,
 					end:      etkList[i].position,
 				})
