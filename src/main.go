@@ -69,7 +69,7 @@ func spawnListHandle(spawnList []spawn, etkList []etk, myPlay play) ([]spawn, []
 func etkListHandle(spawnList []spawn, etkList []etk, towerList []tower, myPlay play, deltaTime float64, myPath path) ([]spawn, []etk, []tower, play) {
 	//move etks
 	for j := 0; j < len(etkList); j++ {
-		etkList[j].wayPointPerc += 0.1 * deltaTime
+		etkList[j].wayPointPerc += etkList[j].speed * deltaTime
 		(&etkList[j]).poisitionFromPath(myPath)
 		//fmt.Print(etkList[j].position.x)
 		//fmt.Print(" ; ")
@@ -132,7 +132,7 @@ func getMapFromPath(pathIn path) [][]uint8 {
 		}
 		outMap = append(outMap, temp)
 	}
-	myEtk := etk_init(vec_init(0.0, 0.0), 0.0, 0.0, 0.0, 0.0)
+	myEtk := etk_init(vec_init(0.0, 0.0), 0.0, 0.0, 0.0, 0.0, 0.0)
 	for i := 0; i < 1000; i++ {
 		(&myEtk).poisitionFromPath(pathIn)
 		myEtk.wayPointPerc += 0.1
@@ -173,12 +173,14 @@ func main() {
 
 	spawnList := [](spawn){}
 
-	spawnList = append(spawnList, spawn_init(
-		1,
-		etk_init(vec_init(0.0, 0.0), 0.0, 1.0, 0.0, 0.0),
-		30,
-		400,
-		0))
+	for i := 0; i < 30; i++ {
+		spawnList = append(spawnList, spawn_init(
+			1,
+			etk_init(vec_init(0.0, 0.0), 0.0, 1.0, 0.0, 0.0, 0.1),
+			30,
+			400,
+			i))
+	}
 
 	etkList := [](etk){}
 
@@ -395,4 +397,5 @@ TODO:
 		make stop between level:
 			only call functions, etc
 		etk speed variable, texture, texture for shot, time for shot
+		path speed multiply???
 */

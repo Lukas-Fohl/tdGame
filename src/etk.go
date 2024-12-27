@@ -6,15 +6,17 @@ type etk struct {
 	health       float64
 	reward       int
 	wayPointPerc float64 //0..100
+	speed        float64
 }
 
-func etk_init(positionIn vec2, radiusIn float64, healthIn float64, rewardIn int, wayPointPercIn float64) etk {
+func etk_init(positionIn vec2, radiusIn float64, healthIn float64, rewardIn int, wayPointPercIn float64, speedIn float64) etk {
 	return etk{
 		position:     positionIn,
 		radius:       radiusIn,
 		health:       healthIn,
 		reward:       rewardIn,
 		wayPointPerc: wayPointPercIn,
+		speed:        speedIn,
 	}
 }
 
