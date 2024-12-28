@@ -10,7 +10,7 @@ type textureSave struct {
 }
 
 func textureSave_init(pathIn string) textureSave {
-	tempImg := rl.LoadImage(pathIn)
+	tempImg := rl.LoadImage("../img/" + pathIn)
 	tempTexture := rl.LoadTextureFromImage(tempImg)
 	rl.UnloadImage(tempImg)
 	return textureSave{
