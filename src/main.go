@@ -162,6 +162,7 @@ func main() {
 	textureList = append(textureList, textureSave_init("floor.png"))
 	textureList = append(textureList, textureSave_init("etk.png"))
 	textureList = append(textureList, textureSave_init("tower.png"))
+	textureList = append(textureList, textureSave_init("cursor.png"))
 
 	spawnList := [](spawn){}
 
@@ -203,8 +204,6 @@ func main() {
 		//vec_init(40.0, 40.0),
 		//vec_init(45.0, 45.0),
 	})
-
-	time.Sleep(1 * time.Millisecond)
 
 	//set delta-time to 0
 	var deltaTime float64 = 0.0
@@ -290,7 +289,13 @@ func main() {
 				myPlay.attackList = append(myPlay.attackList[:idx], myPlay.attackList[idx+1:]...)
 			}
 		}
-
+		mouseGame := screenToGameVec2(vec_init(float64(rl.GetMousePosition().X), float64(rl.GetMousePosition().Y)), float64(blockTexture.Width), float64(blockTexture.Height), float64(screenWidth))
+		mouseGame.x = float64(int(mouseGame.x))
+		mouseGame.y = float64(int(mouseGame.y))
+		if int(mouseGame.x) <= len(myMap[0]) && int(mouseGame.y) <= len(myMap) {
+			vecOut := gameToScreenVec2(mouseGame, float64(blockTexture.Width), float64(blockTexture.Height), float64(screenWidth))
+			rl.DrawTexture(findTexture(textureList, "cursor.png"), int32(vecOut.x), int32(vecOut.y), rl.White)
+		}
 		rl.EndDrawing()
 
 		if (len(etkList) == 0 && len(spawnList) == 0) || myPlay.etkCurrentDmg >= myPlay.etkMaxDmg {
@@ -379,28 +384,9 @@ TODO:
 		--> game to screen position [x]
 		--> screen to game position
 
+	break between level until click
+	--> place tower
 
-		get hits --> save in list
-		--> draw hit for x-ms --> remove from list
-		draw path [x]
-		--> safe as map??? [x]
-		load all textures --> saved in list
-		pop function
-		mid point for texture
-		--> bigger textures
-		scaling
-
-	sanity:
-		inline main loop parts [bad idea but works]
-		make stop between level:
-			only call functions, etc
-		etk speed variable, texture, texture for shot, time for shot
-
-		save in list
-		--> texture-struct
-			have name of texture
-			and loaded texture
-			-- etk has name of texture
-			--> when render check list of textures load
-		path speed multiply???
+	bigger textures
+	scaling
 */
