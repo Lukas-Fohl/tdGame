@@ -7,9 +7,10 @@ type etk struct {
 	reward       int
 	wayPointPerc float64 //0..100
 	speed        float64
+	texturePath  string
 }
 
-func etk_init(positionIn vec2, radiusIn float64, healthIn float64, rewardIn int, wayPointPercIn float64, speedIn float64) etk {
+func etk_init(positionIn vec2, radiusIn float64, healthIn float64, rewardIn int, wayPointPercIn float64, speedIn float64, texturePathIn string) etk {
 	return etk{
 		position:     positionIn,
 		radius:       radiusIn,
@@ -17,6 +18,7 @@ func etk_init(positionIn vec2, radiusIn float64, healthIn float64, rewardIn int,
 		reward:       rewardIn,
 		wayPointPerc: wayPointPercIn,
 		speed:        speedIn,
+		texturePath:  texturePathIn,
 	}
 }
 

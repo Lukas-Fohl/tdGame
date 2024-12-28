@@ -13,9 +13,10 @@ type tower struct {
 	price       int
 	coolDownMax int   //ms to next shoot
 	lastAttack  int64 //ms where last shot happened
+	texturePath string
 }
 
-func tower_init(positionIn vec2, dmgRangeIn float64, dmgIn float64, priceIn int, coolDownMaxIn int) tower {
+func tower_init(positionIn vec2, dmgRangeIn float64, dmgIn float64, priceIn int, coolDownMaxIn int, texturePathIn string) tower {
 	return tower{
 		position:    positionIn,
 		dmgRange:    dmgRangeIn,
@@ -23,6 +24,7 @@ func tower_init(positionIn vec2, dmgRangeIn float64, dmgIn float64, priceIn int,
 		price:       priceIn,
 		coolDownMax: coolDownMaxIn,
 		lastAttack:  (time.Now().UnixNano() / 1_000_000),
+		texturePath: texturePathIn,
 	}
 }
 
@@ -35,12 +37,11 @@ func (towerIn *tower) dmgToETKList(etkList [](*etk)) []attack {
 			if math.Sqrt(disX*disX+disY*disY) <= towerIn.dmgRange && etkList[i].health > 0 {
 				etkList[i].health -= towerIn.dmg
 				fmt.Println("hit")
-				towerIn.price = 69420
 				towerIn.lastAttack = time.Now().UnixNano() / 1_000_000
 
 				attackList = append(attackList, attack{
 					startMS:  time.Now().UnixNano() / 1_000_000,
-					duration: 250,
+					duration: int64(towerIn.coolDownMax) / 3,
 					start:    towerIn.position,
 					end:      etkList[i].position,
 				})
