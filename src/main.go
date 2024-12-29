@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
@@ -168,8 +169,8 @@ func main() {
 
 	for i := 0; i < 30; i++ {
 		spawnList = append(spawnList, spawn_init(
-			1,
-			etk_init(vec_init(0.0, 0.0), 0.0, 1.0, 0.0, 0.0, 0.1, "etk.png"),
+			i+1,
+			etk_init(vec_init(0.0, 0.0), 0.0, 1.0, 1.0, 0.0, 0.1, "etk.png"),
 			30,
 			400,
 			i))
@@ -178,11 +179,6 @@ func main() {
 	etkList := [](etk){}
 
 	myPlay := play{money: 100, etkMaxDmg: 100, etkCurrentDmg: 0, level: 1, levelMsStart: time.Now().UnixNano() / 1e6, attackList: []attack{}}
-
-	//myEtk := etk_init(vec_init(0.0, 0.0), 0.0, 1.0, 0.0, 0.0)
-	//myEtk2 := etk_init(vec_init(0.0, 0.0), 0.0, 1.0, 0.0, 0.0)
-	//etkList = append(etkList, myEtk)
-	//etkList = append(etkList, myEtk2)
 
 	towerList := [](tower){}
 
@@ -225,6 +221,13 @@ func main() {
 
 		rl.ClearBackground(rl.RayWhite)
 
+		rl.DrawText("money: ", 20, 20, 20, rl.Black)
+		rl.DrawText(strconv.Itoa(myPlay.money), 120, 20, 20, rl.Black)
+		rl.DrawText("level: ", 20, 40, 20, rl.Black)
+		rl.DrawText(strconv.Itoa(myPlay.level), 120, 40, 20, rl.Black)
+		rl.DrawText("damage:", 20, 60, 20, rl.Black)
+		rl.DrawText(strconv.Itoa(myPlay.etkCurrentDmg)+" / "+strconv.Itoa(myPlay.etkMaxDmg), 120, 60, 20, rl.Black)
+
 		blockTexture := findTexture(textureList, "block.png")
 		floorTexture := findTexture(textureList, "floor.png")
 
@@ -252,18 +255,30 @@ func main() {
 		tempOut := gameToScreenVec2(vec_init(float64(myPath.wayPoint[len(myPath.wayPoint)-1].x), float64(myPath.wayPoint[len(myPath.wayPoint)-1].y)), float64(floorTexture.Width), float64(floorTexture.Height), float64(screenWidth))
 		rl.DrawTexture(floorTexture, int32(tempOut.x), int32(tempOut.y), rl.White)
 
+		//draw tower
 		for i := 0; i < len(towerList); i++ {
 			towerTexture := findTexture(textureList, towerList[i].texturePath)
 			vecOut := gameToScreenVec2(towerList[i].position, float64(towerTexture.Width), float64(towerTexture.Height), float64(screenWidth))
 			rl.DrawTexture(towerTexture, int32(vecOut.x), int32(vecOut.y), rl.White)
 		}
 
+		//draw cursor
+		mouseGame := screenToGameVec2(vec_init(float64(rl.GetMousePosition().X), float64(rl.GetMousePosition().Y)), float64(blockTexture.Width), float64(blockTexture.Height), float64(screenWidth))
+		mouseGame.x = float64(int(mouseGame.x))
+		mouseGame.y = float64(int(mouseGame.y))
+		if int(mouseGame.x) <= len(myMap[0]) && int(mouseGame.y) <= len(myMap) && int(mouseGame.y) >= 0 && int(mouseGame.x) >= 0 {
+			vecOut := gameToScreenVec2(mouseGame, float64(blockTexture.Width), float64(blockTexture.Height), float64(screenWidth))
+			rl.DrawTexture(findTexture(textureList, "cursor.png"), int32(vecOut.x), int32(vecOut.y), rl.White)
+		}
+
+		//draw etk
 		for i := 0; i < len(etkList); i++ {
 			etkTexture := findTexture(textureList, etkList[i].texturePath)
 			vecOut := gameToScreenVec2(etkList[i].position, float64(etkTexture.Width), float64(etkTexture.Height), float64(screenWidth))
 			rl.DrawTexture(etkTexture, int32(vecOut.x), int32(vecOut.y), rl.White)
 		}
 
+		//draw attack
 		rl.SetLineWidth(3.5)
 		attackRemoveList := []int{}
 		for i := 0; i < len(myPlay.attackList); i++ {
@@ -289,13 +304,7 @@ func main() {
 				myPlay.attackList = append(myPlay.attackList[:idx], myPlay.attackList[idx+1:]...)
 			}
 		}
-		mouseGame := screenToGameVec2(vec_init(float64(rl.GetMousePosition().X), float64(rl.GetMousePosition().Y)), float64(blockTexture.Width), float64(blockTexture.Height), float64(screenWidth))
-		mouseGame.x = float64(int(mouseGame.x))
-		mouseGame.y = float64(int(mouseGame.y))
-		if int(mouseGame.x) <= len(myMap[0]) && int(mouseGame.y) <= len(myMap) {
-			vecOut := gameToScreenVec2(mouseGame, float64(blockTexture.Width), float64(blockTexture.Height), float64(screenWidth))
-			rl.DrawTexture(findTexture(textureList, "cursor.png"), int32(vecOut.x), int32(vecOut.y), rl.White)
-		}
+
 		rl.EndDrawing()
 
 		if (len(etkList) == 0 && len(spawnList) == 0) || myPlay.etkCurrentDmg >= myPlay.etkMaxDmg {
@@ -383,6 +392,10 @@ TODO:
 		isometric view
 		--> game to screen position [x]
 		--> screen to game position
+
+	options for tower --> onclick
+	button for next level --> gray if not needed
+	show numbers: money, dmg/max, level
 
 	break between level until click
 	--> place tower

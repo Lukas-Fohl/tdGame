@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math"
 	"time"
 )
@@ -36,7 +35,7 @@ func (towerIn *tower) dmgToETKList(etkList [](*etk)) []attack {
 		if towerIn.lastAttack+int64(towerIn.coolDownMax) <= time.Now().UnixNano()/1_000_000 {
 			if math.Sqrt(disX*disX+disY*disY) <= towerIn.dmgRange && etkList[i].health > 0 {
 				etkList[i].health -= towerIn.dmg
-				fmt.Println("hit")
+				//fmt.Println("hit")
 				towerIn.lastAttack = time.Now().UnixNano() / 1_000_000
 
 				attackList = append(attackList, attack{
