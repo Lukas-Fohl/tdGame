@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 	"time"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
@@ -26,18 +25,6 @@ func vec_init(xIn float64, yIn float64) vec2 {
 }
 
 func spawnListHandle(spawnList []spawn, etkList []etk, myPlay play) ([]spawn, []etk, play) {
-	//check if spawns for this level are left
-	hasSpawnWithSameLevel := false
-	for j := 0; j < len(spawnList); j++ {
-		if spawnList[j].amount > 0 && spawnList[j].level == myPlay.level {
-			hasSpawnWithSameLevel = true
-		}
-	}
-	if !hasSpawnWithSameLevel && len(etkList) == 0 {
-		//wait for button to be pressed
-		myPlay.level++
-	}
-
 	//spawn etks
 	smallestSpawnByOrd := &spawn{orderNum: 1024}
 	for j := 0; j < len(spawnList); j++ {
@@ -170,7 +157,7 @@ func main() {
 	for i := 0; i < 30; i++ {
 		spawnList = append(spawnList, spawn_init(
 			i+1,
-			etk_init(vec_init(0.0, 0.0), 0.0, 1.0, 1.0, 0.0, 0.1, "etk.png"),
+			etk_init(vec_init(0.0, 0.0), 0.0, 1.0, 3.0, 0.0, 0.1, "etk.png"),
 			30,
 			400,
 			i))
@@ -187,6 +174,10 @@ func main() {
 
 	towerList = append(towerList, towerList1)
 	towerList = append(towerList, towerList2)
+
+	myTowerInfo := towerInfo_init(false, &towerList1)
+
+	testButton := button_init(vec_init(900.0, 550.0), vec_init(120.0, 120.0), "next level", "")
 
 	myPath := path_init([]vec2{
 		vec_init(0.0, 0.0),
@@ -221,12 +212,7 @@ func main() {
 
 		rl.ClearBackground(rl.RayWhite)
 
-		rl.DrawText("money: ", 20, 20, 20, rl.Black)
-		rl.DrawText(strconv.Itoa(myPlay.money), 120, 20, 20, rl.Black)
-		rl.DrawText("level: ", 20, 40, 20, rl.Black)
-		rl.DrawText(strconv.Itoa(myPlay.level), 120, 40, 20, rl.Black)
-		rl.DrawText("damage:", 20, 60, 20, rl.Black)
-		rl.DrawText(strconv.Itoa(myPlay.etkCurrentDmg)+" / "+strconv.Itoa(myPlay.etkMaxDmg), 120, 60, 20, rl.Black)
+		myPlay.drawStats()
 
 		blockTexture := findTexture(textureList, "block.png")
 		floorTexture := findTexture(textureList, "floor.png")
@@ -271,6 +257,20 @@ func main() {
 			rl.DrawTexture(findTexture(textureList, "cursor.png"), int32(vecOut.x), int32(vecOut.y), rl.White)
 		}
 
+		myTowerInfo.drawTowerInfo(findTexture(textureList, myTowerInfo.tower.texturePath))
+		if rl.IsMouseButtonReleased(rl.MouseButtonLeft) {
+			for i := 0; i < len(towerList); i++ {
+				if mouseGame == towerList[i].position {
+					if myTowerInfo.tower == &towerList[i] && myTowerInfo.show {
+						myTowerInfo.show = false
+					} else {
+						myTowerInfo.show = true
+						myTowerInfo.tower = &towerList[i]
+					}
+				}
+			}
+		}
+
 		//draw etk
 		for i := 0; i < len(etkList); i++ {
 			etkTexture := findTexture(textureList, etkList[i].texturePath)
@@ -302,6 +302,21 @@ func main() {
 				myPlay.attackList = myPlay.attackList[:len(myPlay.attackList)-1]
 			} else {
 				myPlay.attackList = append(myPlay.attackList[:idx], myPlay.attackList[idx+1:]...)
+			}
+		}
+
+		//check if spawns for this level are left
+		hasSpawnWithSameLevel := false
+		for j := 0; j < len(spawnList); j++ {
+			if spawnList[j].amount > 0 && spawnList[j].level == myPlay.level {
+				hasSpawnWithSameLevel = true
+			}
+		}
+
+		if !hasSpawnWithSameLevel && len(etkList) == 0 {
+			testButton.draw()
+			if testButton.isClicked() {
+				myPlay.level++
 			}
 		}
 
@@ -393,12 +408,18 @@ TODO:
 		--> game to screen position [x]
 		--> screen to game position
 
-	options for tower --> onclick
-	button for next level --> gray if not needed
-	show numbers: money, dmg/max, level
+	build button comp
 
-	break between level until click
-	--> place tower
+	options for tower --> onclick
+		--> on tower click
+			open side pannel
+			don't draw game-cursor
+			check for upgrades
+			--> close button
+
+	button for next level --> gray if not needed (don't increase level)
+
+	show numbers: money, dmg/max, level [x]
 
 	bigger textures
 	scaling
