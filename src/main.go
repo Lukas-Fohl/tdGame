@@ -141,7 +141,7 @@ func main() {
 	screenWidth := int32(1080)
 	screenHeight := int32(720)
 
-	rl.InitWindow(screenWidth, screenHeight, "omtfyb")
+	rl.InitWindow(screenWidth, screenHeight, "omwtfyb")
 	rl.SetTargetFPS(60)
 	defer rl.CloseWindow()
 
@@ -172,24 +172,30 @@ func main() {
 	towerList1 := tower_init(vec_init(8.0, 8.0), 5.0, 20.0, 10, 900, "tower.png")
 	towerList2 := tower_init(vec_init(11.0, 11.0), 5.0, 20.0, 10, 900, "tower.png")
 
-	state1 := state_init(1, "", tower_init(vec_init(8.0, 8.0), 5.0, 20.0, 10, 900, "tower.png"))
-	state2 := state_init(5, "", tower_init(vec_init(8.0, 8.0), 6.0, 20.0, 10, 900, "tower.png"))
-	state3 := state_init(1, "", tower_init(vec_init(8.0, 8.0), 7.0, 20.0, 10, 900, "tower.png"))
+	u1_list := []state{}
+	u1_list = append(u1_list, state_init(1, "", tower_init(vec_init(8.0, 8.0), 5.0, 0.0, 0, 0, "")))
+	u1_list = append(u1_list, state_init(1, "range +1", tower_init(vec_init(8.0, 8.0), 6.0, 0.0, 0, 0, "")))
+	u1_list = append(u1_list, state_init(1, "range +1", tower_init(vec_init(8.0, 8.0), 7.0, 0.0, 0, 0, "")))
 
-	upgrade1 := upgrade_init([]state{state1, state2, state3})
+	u2_list := []state{}
+	u2_list = append(u2_list, state_init(1, "", tower_init(vec_init(8.0, 8.0), 0.0, 5.0, 0, 0, "")))
+	u2_list = append(u2_list, state_init(1, "dmg +1", tower_init(vec_init(8.0, 8.0), 0.0, 6.0, 0, 0, "")))
+	u2_list = append(u2_list, state_init(1, "dmg +1", tower_init(vec_init(8.0, 8.0), 0.0, 7.0, 0, 0, "")))
+
+	upgrade1 := upgrade_init(u1_list)
+	upgrade2 := upgrade_init(u2_list)
 
 	towerList1.addUpgrade(upgrade1)
+	towerList1.addUpgrade(upgrade2)
 
-	for i := 0; i < 3; i++ {
-		towerList1.levelUpUpgrade(0, &myPlay)
-	}
+	towerList2.addUpgrade(upgrade2)
 
 	towerList = append(towerList, towerList1)
 	towerList = append(towerList, towerList2)
 
 	myTowerInfo := towerInfo_init(false, &towerList1)
 
-	testButton := button_init(vec_init(940.0, 580.0), vec_init(120.0, 120.0), "next level", "")
+	nextLevelButton := button_init(vec_init(940.0, 580.0), vec_init(120.0, 120.0), "next level", "", rl.Gray)
 
 	myPath := path_init([]vec2{
 		vec_init(0.0, 0.0),
@@ -269,7 +275,7 @@ func main() {
 			rl.DrawTexture(findTexture(textureList, "cursor.png"), int32(vecOut.x), int32(vecOut.y), rl.White)
 		}
 
-		myTowerInfo.drawTowerInfo(findTexture(textureList, myTowerInfo.tower.texturePath))
+		(&myTowerInfo).drawTowerInfo(findTexture(textureList, myTowerInfo.tower.texturePath), &myPlay)
 		if rl.IsMouseButtonReleased(rl.MouseButtonLeft) {
 			buttonClicked := false
 			for i := 0; i < len(myTowerInfo.buttons); i++ {
@@ -340,8 +346,8 @@ func main() {
 		}
 
 		if !hasSpawnWithSameLevel && len(etkList) == 0 {
-			testButton.draw()
-			if testButton.isClicked() {
+			nextLevelButton.draw()
+			if nextLevelButton.isClicked() {
 				myPlay.level++
 			}
 		}
@@ -457,7 +463,8 @@ TODO:
 	scaling
 
 	build upgrades [x]
-	--> handel upgrade button + click
+	--> handel upgrade button + click [x]
+	--> show description + price
 
 	place tower!!!!!!
 

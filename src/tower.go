@@ -82,13 +82,22 @@ func upgrade_init(statesIn []state) upgrade {
 
 func (towerIn *tower) addUpgrade(upgradeIn upgrade) {
 	towerIn.upgrades = append(towerIn.upgrades, upgradeIn)
+	towerIn.applyUpgrade(upgradeIn)
 }
 
 func (towerIn *tower) applyUpgrade(upgradeIn upgrade) {
-	towerIn.dmgRange = upgradeIn.states[upgradeIn.level].tower.dmgRange
-	towerIn.dmg = upgradeIn.states[upgradeIn.level].tower.dmg
-	towerIn.coolDownMax = upgradeIn.states[upgradeIn.level].tower.coolDownMax
-	towerIn.texturePath = upgradeIn.states[upgradeIn.level].tower.texturePath
+	if upgradeIn.states[upgradeIn.level].tower.dmgRange != 0 {
+		towerIn.dmgRange = upgradeIn.states[upgradeIn.level].tower.dmgRange
+	}
+	if upgradeIn.states[upgradeIn.level].tower.dmg != 0 {
+		towerIn.dmg = upgradeIn.states[upgradeIn.level].tower.dmg
+	}
+	if upgradeIn.states[upgradeIn.level].tower.coolDownMax != 0 {
+		towerIn.coolDownMax = upgradeIn.states[upgradeIn.level].tower.coolDownMax
+	}
+	if upgradeIn.states[upgradeIn.level].tower.texturePath != "" {
+		towerIn.texturePath = upgradeIn.states[upgradeIn.level].tower.texturePath
+	}
 }
 
 func (towerIn *tower) levelUpUpgrade(index int, playIn *play) {

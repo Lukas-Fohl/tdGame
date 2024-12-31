@@ -20,14 +20,16 @@ type button struct {
 	size        vec2
 	text        string
 	texturePath string
+	color       rl.Color
 }
 
-func button_init(positionIn vec2, sizeIn vec2, textIn string, texturePathIn string) button {
+func button_init(positionIn vec2, sizeIn vec2, textIn string, texturePathIn string, colorIn rl.Color) button {
 	return button{
 		position:    positionIn,
 		size:        sizeIn,
 		text:        textIn,
 		texturePath: texturePathIn,
+		color:       colorIn,
 	}
 }
 
@@ -37,7 +39,7 @@ func (buttonIn button) draw() {
 		int32(buttonIn.position.y),
 		int32(buttonIn.size.x),
 		int32(buttonIn.size.y),
-		rl.Gray)
+		buttonIn.color)
 	fontSize := 20
 	rl.DrawText(buttonIn.text, int32(buttonIn.position.x)+int32(fontSize)/2, int32(buttonIn.position.y)+(int32(buttonIn.size.y)/2)-int32(fontSize/2), int32(fontSize), rl.Black)
 }
@@ -67,7 +69,8 @@ func towerInfo_init(showIn bool, towerIn *tower) towerInfo {
 	}
 }
 
-func (towerInfoIn towerInfo) drawTowerInfo(textureIn rl.Texture2D) {
+func (towerInfoIn *towerInfo) drawTowerInfo(textureIn rl.Texture2D, playIn *play) {
+	fontSize := 20
 	if towerInfoIn.show {
 		backgroundRectangle := rl.NewRectangle(760, 20, 300, 500)
 		rl.DrawRectangle(
@@ -76,21 +79,41 @@ func (towerInfoIn towerInfo) drawTowerInfo(textureIn rl.Texture2D) {
 			backgroundRectangle.ToInt32().Width,
 			backgroundRectangle.ToInt32().Height,
 			rl.Gray)
-		rl.DrawText("Position:", 780, 40, 20, rl.Black)
-		rl.DrawText(strconv.Itoa(int(towerInfoIn.tower.position.x))+", "+strconv.Itoa(int(towerInfoIn.tower.position.y)), 940, 40, 20, rl.Black)
-		rl.DrawText("Range:", 780, 60, 20, rl.Black)
-		rl.DrawText(strconv.Itoa(int(towerInfoIn.tower.dmgRange)), 940, 60, 20, rl.Black)
-		rl.DrawText("Dmg:", 780, 80, 20, rl.Black)
-		rl.DrawText(strconv.Itoa(int(towerInfoIn.tower.dmg)), 940, 80, 20, rl.Black)
-		rl.DrawText("Cooldown (ms):", 780, 100, 20, rl.Black)
-		rl.DrawText(strconv.Itoa(int(towerInfoIn.tower.coolDownMax)), 940, 100, 20, rl.Black)
-		rl.DrawText("Killed:", 780, 120, 20, rl.Black)
-		rl.DrawText(strconv.Itoa(int(towerInfoIn.tower.killed)), 940, 120, 20, rl.Black)
-		rl.DrawText("Money made:", 780, 140, 20, rl.Black)
-		rl.DrawText(strconv.Itoa(int(towerInfoIn.tower.moneyMade)), 940, 140, 20, rl.Black)
+		rl.DrawText("Position:", 780, 40, int32(fontSize), rl.Black)
+		rl.DrawText(strconv.Itoa(int(towerInfoIn.tower.position.x))+", "+strconv.Itoa(int(towerInfoIn.tower.position.y)), 940, 40, int32(fontSize), rl.Black)
+		rl.DrawText("Range:", 780, 60, int32(fontSize), rl.Black)
+		rl.DrawText(strconv.Itoa(int(towerInfoIn.tower.dmgRange)), 940, 60, int32(fontSize), rl.Black)
+		rl.DrawText("Dmg:", 780, 80, int32(fontSize), rl.Black)
+		rl.DrawText(strconv.Itoa(int(towerInfoIn.tower.dmg)), 940, 80, int32(fontSize), rl.Black)
+		rl.DrawText("Cooldown (ms):", 780, 100, int32(fontSize), rl.Black)
+		rl.DrawText(strconv.Itoa(int(towerInfoIn.tower.coolDownMax)), 940, 100, int32(fontSize), rl.Black)
+		rl.DrawText("Killed:", 780, 120, int32(fontSize), rl.Black)
+		rl.DrawText(strconv.Itoa(int(towerInfoIn.tower.killed)), 940, 120, int32(fontSize), rl.Black)
+		rl.DrawText("Money made:", 780, 140, int32(fontSize), rl.Black)
+		rl.DrawText(strconv.Itoa(int(towerInfoIn.tower.moneyMade)), 940, 140, int32(fontSize), rl.Black)
 		rl.DrawTexture(textureIn, 780, 170, rl.Gray)
 		for i := 0; i < len(towerInfoIn.buttons); i++ {
 			towerInfoIn.buttons[i].draw()
+		}
+		//draw range of buttons
+		//check for click --> levelUpUpgrade
+		fontSize = 15
+		towerInfoIn.buttons = []button{}
+		offset := 200
+		buttonWidth := 50
+		buttonDis := 70
+		for i := 0; i < len(towerInfoIn.tower.upgrades); i++ {
+			displayText := strconv.Itoa(towerInfoIn.tower.upgrades[i].level) + "/" + strconv.Itoa(len(towerInfoIn.tower.upgrades[i].states)-1)
+			tempButton := button_init(vec_init(780.0, float64(buttonDis*i+offset)), vec_init(float64(buttonWidth), float64(buttonWidth)), "", "", rl.White)
+			rl.DrawText(displayText, 850, int32(buttonDis*i+(offset+(buttonDis/2)-fontSize)), int32(fontSize), rl.Black)
+			towerInfoIn.buttons = append(towerInfoIn.buttons, tempButton)
+			tempButton.draw()
+			if towerInfoIn.tower.upgrades[i].level < len(towerInfoIn.tower.upgrades[i].states)-1 {
+				rl.DrawText(towerInfoIn.tower.upgrades[i].states[towerInfoIn.tower.upgrades[i].level+1].description, 900, int32(buttonDis*i+(offset+(buttonDis/2)-fontSize)), int32(fontSize), rl.Black)
+			}
+			if tempButton.isClicked() {
+				towerInfoIn.tower.levelUpUpgrade(i, playIn)
+			}
 		}
 	}
 	return
