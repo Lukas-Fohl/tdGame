@@ -6,30 +6,49 @@ import (
 )
 
 type tower struct {
-	position    vec2
-	dmgRange    float64
-	dmg         float64
-	price       int
-	coolDownMax int   //ms to next shoot
-	lastAttack  int64 //ms where last shot happened
-	texturePath string
-	killed      int
-	moneyMade   int
-	upgrades    []upgrade
+	position      vec2
+	dmgRange      float64
+	dmg           float64
+	price         int
+	coolDownMax   int   //ms to next shoot
+	lastAttack    int64 //ms where last shot happened
+	texturePath   string
+	killed        int
+	moneyMade     int
+	upgrades      []upgrade
+	typesToAttack []etkType
 }
 
-func tower_init(positionIn vec2, dmgRangeIn float64, dmgIn float64, priceIn int, coolDownMaxIn int, texturePathIn string) tower {
+func tower_init(positionIn vec2, dmgRangeIn float64, dmgIn float64, priceIn int, coolDownMaxIn int, texturePathIn string, typesToAttackIn []etkType) tower {
 	return tower{
-		position:    positionIn,
-		dmgRange:    dmgRangeIn,
-		dmg:         dmgIn,
-		price:       priceIn,
-		coolDownMax: coolDownMaxIn,
-		lastAttack:  (time.Now().UnixNano() / 1_000_000),
-		texturePath: texturePathIn,
-		killed:      0,
-		moneyMade:   0,
+		position:      positionIn,
+		dmgRange:      dmgRangeIn,
+		dmg:           dmgIn,
+		price:         priceIn,
+		coolDownMax:   coolDownMaxIn,
+		lastAttack:    (time.Now().UnixNano() / 1_000_000),
+		texturePath:   texturePathIn,
+		killed:        0,
+		moneyMade:     0,
+		typesToAttack: typesToAttackIn,
 	}
+}
+
+func canAttack(towerTypeList []etkType, etkTypeList []etkType) bool {
+	canAttack := true
+	for i := 0; i < len(etkTypeList); i++ {
+		isIn := false
+		for j := 0; j < len(towerTypeList); j++ {
+			if etkTypeList[i] == towerTypeList[j] {
+				isIn = true
+			}
+		}
+		if !isIn {
+			canAttack = false
+			break
+		}
+	}
+	return canAttack
 }
 
 func (towerIn *tower) dmgToETKList(etkList [](*etk)) []attack {
@@ -38,7 +57,7 @@ func (towerIn *tower) dmgToETKList(etkList [](*etk)) []attack {
 		disX := math.Abs(towerIn.position.x - etkList[i].position.x)
 		disY := math.Abs(towerIn.position.y - etkList[i].position.y)
 		if towerIn.lastAttack+int64(towerIn.coolDownMax) <= time.Now().UnixNano()/1_000_000 {
-			if math.Sqrt(disX*disX+disY*disY) <= towerIn.dmgRange && etkList[i].health > 0 {
+			if math.Sqrt(disX*disX+disY*disY) <= towerIn.dmgRange && etkList[i].health > 0 && canAttack(towerIn.typesToAttack, etkList[i].selfType) {
 				etkList[i].health -= towerIn.dmg
 				if etkList[i].health <= 0 {
 					towerIn.killed++

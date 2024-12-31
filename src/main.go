@@ -121,7 +121,7 @@ func getMapFromPath(pathIn path) [][]uint8 {
 		}
 		outMap = append(outMap, temp)
 	}
-	myEtk := etk_init(vec_init(0.0, 0.0), 0.0, 0.0, 0.0, 0.0, 0.0, "")
+	myEtk := etk_init(vec_init(0.0, 0.0), 0.0, 0.0, 0.0, 0.0, 0.0, "", []etkType{})
 	for i := 0; i < 1000; i++ {
 		(&myEtk).poisitionFromPath(pathIn)
 		myEtk.wayPointPerc += 0.1
@@ -157,7 +157,7 @@ func main() {
 	for i := 0; i < 30; i++ {
 		spawnList = append(spawnList, spawn_init(
 			i+1,
-			etk_init(vec_init(0.0, 0.0), 0.0, 1.0, 3.0, 0.0, 0.1, "etk.png"),
+			etk_init(vec_init(0.0, 0.0), 0.0, 1.0, 3.0, 0.0, 0.1, "etk.png", []etkType{normal}),
 			30,
 			400,
 			i))
@@ -169,18 +169,20 @@ func main() {
 
 	towerList := [](tower){}
 
-	towerList1 := tower_init(vec_init(8.0, 8.0), 5.0, 20.0, 10, 900, "tower.png")
-	towerList2 := tower_init(vec_init(11.0, 11.0), 5.0, 20.0, 10, 900, "tower.png")
+	nromalAttackList := []etkType{normal}
+
+	towerList1 := tower_init(vec_init(8.0, 8.0), 5.0, 20.0, 10, 900, "tower.png", nromalAttackList)
+	towerList2 := tower_init(vec_init(11.0, 11.0), 5.0, 20.0, 10, 900, "tower.png", nromalAttackList)
 
 	u1_list := []state{}
-	u1_list = append(u1_list, state_init(1, "", tower_init(vec_init(8.0, 8.0), 5.0, 0.0, 0, 0, "")))
-	u1_list = append(u1_list, state_init(1, "range +1", tower_init(vec_init(8.0, 8.0), 6.0, 0.0, 0, 0, "")))
-	u1_list = append(u1_list, state_init(1, "range +1", tower_init(vec_init(8.0, 8.0), 7.0, 0.0, 0, 0, "")))
+	u1_list = append(u1_list, state_init(1, "", tower_init(vec_init(8.0, 8.0), 5.0, 0.0, 0, 0, "", nromalAttackList)))
+	u1_list = append(u1_list, state_init(1, "range +1", tower_init(vec_init(8.0, 8.0), 6.0, 0.0, 0, 0, "", nromalAttackList)))
+	u1_list = append(u1_list, state_init(1, "range +1", tower_init(vec_init(8.0, 8.0), 7.0, 0.0, 0, 0, "", nromalAttackList)))
 
 	u2_list := []state{}
-	u2_list = append(u2_list, state_init(1, "", tower_init(vec_init(8.0, 8.0), 0.0, 5.0, 0, 0, "")))
-	u2_list = append(u2_list, state_init(1, "dmg +1", tower_init(vec_init(8.0, 8.0), 0.0, 6.0, 0, 0, "")))
-	u2_list = append(u2_list, state_init(1, "dmg +1", tower_init(vec_init(8.0, 8.0), 0.0, 7.0, 0, 0, "")))
+	u2_list = append(u2_list, state_init(1, "", tower_init(vec_init(8.0, 8.0), 0.0, 5.0, 0, 0, "", nromalAttackList)))
+	u2_list = append(u2_list, state_init(1, "dmg +1", tower_init(vec_init(8.0, 8.0), 0.0, 6.0, 0, 0, "", nromalAttackList)))
+	u2_list = append(u2_list, state_init(1, "dmg +1", tower_init(vec_init(8.0, 8.0), 0.0, 7.0, 0, 0, "", nromalAttackList)))
 
 	upgrade1 := upgrade_init(u1_list)
 	upgrade2 := upgrade_init(u2_list)
@@ -468,7 +470,7 @@ TODO:
 
 	place tower!!!!!!
 
-	add etk types!!!!!!
+	add etk types!!!!!! [x]
 	--> add types to attack for tower
 
 	add map format

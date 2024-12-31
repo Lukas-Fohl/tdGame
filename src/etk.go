@@ -1,5 +1,15 @@
 package main
 
+type etkType int
+
+const (
+	normal etkType = iota
+	big
+	bigger
+	small
+	smaller
+)
+
 type etk struct {
 	position     vec2
 	radius       float64
@@ -8,9 +18,10 @@ type etk struct {
 	wayPointPerc float64 //0..100
 	speed        float64
 	texturePath  string
+	selfType     []etkType
 }
 
-func etk_init(positionIn vec2, radiusIn float64, healthIn float64, rewardIn int, wayPointPercIn float64, speedIn float64, texturePathIn string) etk {
+func etk_init(positionIn vec2, radiusIn float64, healthIn float64, rewardIn int, wayPointPercIn float64, speedIn float64, texturePathIn string, selfTypeIn []etkType) etk {
 	return etk{
 		position:     positionIn,
 		radius:       radiusIn,
@@ -19,6 +30,7 @@ func etk_init(positionIn vec2, radiusIn float64, healthIn float64, rewardIn int,
 		wayPointPerc: wayPointPercIn,
 		speed:        speedIn,
 		texturePath:  texturePathIn,
+		selfType:     selfTypeIn,
 	}
 }
 
