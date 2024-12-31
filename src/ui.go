@@ -54,14 +54,16 @@ func (buttonIn button) isClicked() bool {
 }
 
 type towerInfo struct {
-	show  bool
-	tower *tower
+	show    bool
+	tower   *tower
+	buttons []button
 }
 
 func towerInfo_init(showIn bool, towerIn *tower) towerInfo {
 	return towerInfo{
-		show:  showIn,
-		tower: towerIn,
+		show:    showIn,
+		tower:   towerIn,
+		buttons: []button{},
 	}
 }
 
@@ -87,6 +89,9 @@ func (towerInfoIn towerInfo) drawTowerInfo(textureIn rl.Texture2D) {
 		rl.DrawText("Money made:", 780, 140, 20, rl.Black)
 		rl.DrawText(strconv.Itoa(int(towerInfoIn.tower.moneyMade)), 940, 140, 20, rl.Black)
 		rl.DrawTexture(textureIn, 780, 170, rl.Gray)
+		for i := 0; i < len(towerInfoIn.buttons); i++ {
+			towerInfoIn.buttons[i].draw()
+		}
 	}
 	return
 }

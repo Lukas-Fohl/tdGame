@@ -15,6 +15,7 @@ type tower struct {
 	texturePath string
 	killed      int
 	moneyMade   int
+	upgrades    []upgrade
 }
 
 func tower_init(positionIn vec2, dmgRangeIn float64, dmgIn float64, priceIn int, coolDownMaxIn int, texturePathIn string) tower {
@@ -65,4 +66,51 @@ func (towerIn *tower) dmgToETKList(etkList [](*etk)) []attack {
 		}
 	}
 	return attackList
+}
+
+type upgrade struct {
+	level  int
+	states []state
+}
+
+func upgrade_init(statesIn []state) upgrade {
+	return upgrade{
+		level:  0,
+		states: statesIn,
+	}
+}
+
+func (towerIn *tower) addUpgrade(upgradeIn upgrade) {
+	towerIn.upgrades = append(towerIn.upgrades, upgradeIn)
+}
+
+func (towerIn *tower) applyUpgrade(upgradeIn upgrade) {
+	towerIn.dmgRange = upgradeIn.states[upgradeIn.level].tower.dmgRange
+	towerIn.dmg = upgradeIn.states[upgradeIn.level].tower.dmg
+	towerIn.coolDownMax = upgradeIn.states[upgradeIn.level].tower.coolDownMax
+	towerIn.texturePath = upgradeIn.states[upgradeIn.level].tower.texturePath
+}
+
+func (towerIn *tower) levelUpUpgrade(index int, playIn *play) {
+	if towerIn.upgrades[index].level < len(towerIn.upgrades[index].states)-1 {
+		if towerIn.upgrades[index].states[towerIn.upgrades[index].level+1].statePrice <= playIn.money {
+			playIn.money -= towerIn.upgrades[index].states[towerIn.upgrades[index].level+1].statePrice
+			towerIn.upgrades[index].level++
+		}
+	}
+	towerIn.applyUpgrade(towerIn.upgrades[index])
+}
+
+type state struct {
+	statePrice  int
+	tower       tower
+	description string
+}
+
+func state_init(priceIn int, descriptionIn string, towerIn tower) state {
+	return state{
+		statePrice:  priceIn,
+		tower:       towerIn,
+		description: descriptionIn,
+	}
 }

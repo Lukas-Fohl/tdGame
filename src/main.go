@@ -114,9 +114,9 @@ func getMapFromPath(pathIn path) [][]uint8 {
 		}
 	}
 	outMap := [][]uint8{}
-	for y := 0; y < int(biggest.y); y++ {
+	for y := 0; y <= int(biggest.y); y++ {
 		temp := []uint8{}
-		for x := 0; x < int(biggest.x); x++ {
+		for x := 0; x <= int(biggest.x); x++ {
 			temp = append(temp, uint8(0))
 		}
 		outMap = append(outMap, temp)
@@ -172,12 +172,24 @@ func main() {
 	towerList1 := tower_init(vec_init(8.0, 8.0), 5.0, 20.0, 10, 900, "tower.png")
 	towerList2 := tower_init(vec_init(11.0, 11.0), 5.0, 20.0, 10, 900, "tower.png")
 
+	state1 := state_init(1, "", tower_init(vec_init(8.0, 8.0), 5.0, 20.0, 10, 900, "tower.png"))
+	state2 := state_init(5, "", tower_init(vec_init(8.0, 8.0), 6.0, 20.0, 10, 900, "tower.png"))
+	state3 := state_init(1, "", tower_init(vec_init(8.0, 8.0), 7.0, 20.0, 10, 900, "tower.png"))
+
+	upgrade1 := upgrade_init([]state{state1, state2, state3})
+
+	towerList1.addUpgrade(upgrade1)
+
+	for i := 0; i < 3; i++ {
+		towerList1.levelUpUpgrade(0, &myPlay)
+	}
+
 	towerList = append(towerList, towerList1)
 	towerList = append(towerList, towerList2)
 
 	myTowerInfo := towerInfo_init(false, &towerList1)
 
-	testButton := button_init(vec_init(900.0, 550.0), vec_init(120.0, 120.0), "next level", "")
+	testButton := button_init(vec_init(940.0, 580.0), vec_init(120.0, 120.0), "next level", "")
 
 	myPath := path_init([]vec2{
 		vec_init(0.0, 0.0),
@@ -228,18 +240,18 @@ func main() {
 			}
 		}
 
-		for yDraw := 0; yDraw < len(myMap); yDraw++ {
-			vecOut := gameToScreenVec2(vec_init(float64(len(myMap[0])), float64(yDraw)), float64(blockTexture.Width), float64(blockTexture.Height), float64(screenWidth))
-			rl.DrawTexture(blockTexture, int32(vecOut.x), int32(vecOut.y), rl.White)
-		}
+		//tempOut := gameToScreenVec2(vec_init(float64(myPath.wayPoint[len(myPath.wayPoint)-1].x), float64(myPath.wayPoint[len(myPath.wayPoint)-1].y)), float64(floorTexture.Width), float64(floorTexture.Height), float64(screenWidth))
+		//rl.DrawTexture(floorTexture, int32(tempOut.x), int32(tempOut.y), rl.White)
 
-		for xDraw := 0; xDraw <= len(myMap[0]); xDraw++ {
-			vecOut := gameToScreenVec2(vec_init(float64(xDraw), float64(len(myMap))), float64(blockTexture.Width), float64(blockTexture.Height), float64(screenWidth))
-			rl.DrawTexture(blockTexture, int32(vecOut.x), int32(vecOut.y), rl.White)
-		}
+		//for yDraw := 0; yDraw < len(myMap); yDraw++ {
+		//	vecOut := gameToScreenVec2(vec_init(float64(len(myMap[0])), float64(yDraw)), float64(blockTexture.Width), float64(blockTexture.Height), float64(screenWidth))
+		//	rl.DrawTexture(blockTexture, int32(vecOut.x), int32(vecOut.y), rl.White)
+		//}
 
-		tempOut := gameToScreenVec2(vec_init(float64(myPath.wayPoint[len(myPath.wayPoint)-1].x), float64(myPath.wayPoint[len(myPath.wayPoint)-1].y)), float64(floorTexture.Width), float64(floorTexture.Height), float64(screenWidth))
-		rl.DrawTexture(floorTexture, int32(tempOut.x), int32(tempOut.y), rl.White)
+		//for xDraw := 0; xDraw <= len(myMap[0]); xDraw++ {
+		//	vecOut := gameToScreenVec2(vec_init(float64(xDraw), float64(len(myMap))), float64(blockTexture.Width), float64(blockTexture.Height), float64(screenWidth))
+		//	rl.DrawTexture(blockTexture, int32(vecOut.x), int32(vecOut.y), rl.White)
+		//}
 
 		//draw tower
 		for i := 0; i < len(towerList); i++ {
@@ -259,14 +271,28 @@ func main() {
 
 		myTowerInfo.drawTowerInfo(findTexture(textureList, myTowerInfo.tower.texturePath))
 		if rl.IsMouseButtonReleased(rl.MouseButtonLeft) {
-			for i := 0; i < len(towerList); i++ {
-				if mouseGame == towerList[i].position {
-					if myTowerInfo.tower == &towerList[i] && myTowerInfo.show {
-						myTowerInfo.show = false
-					} else {
-						myTowerInfo.show = true
-						myTowerInfo.tower = &towerList[i]
+			buttonClicked := false
+			for i := 0; i < len(myTowerInfo.buttons); i++ {
+				buttonRectangle := rl.NewRectangle(float32(myTowerInfo.buttons[i].position.x), float32(myTowerInfo.buttons[i].position.y), float32(myTowerInfo.buttons[i].size.x), float32(myTowerInfo.buttons[i].size.y))
+				if rl.CheckCollisionPointRec(rl.GetMousePosition(), buttonRectangle) {
+					buttonClicked = true
+				}
+			}
+			if !buttonClicked {
+				foundTower := false
+				for i := 0; i < len(towerList); i++ {
+					if mouseGame == towerList[i].position {
+						foundTower = true
+						if myTowerInfo.tower == &towerList[i] && myTowerInfo.show {
+							myTowerInfo.show = false
+						} else {
+							myTowerInfo.show = true
+							myTowerInfo.tower = &towerList[i]
+						}
 					}
+				}
+				if !foundTower {
+					myTowerInfo.show = false
 				}
 			}
 		}
@@ -406,21 +432,37 @@ TODO:
 		raylib
 		isometric view
 		--> game to screen position [x]
-		--> screen to game position
+		--> screen to game position [x]
 
-	build button comp
+	######################IMPORTANT######################
 
-	options for tower --> onclick
+
+	build button comp [x]
+
+	options for tower --> onclick [x]
 		--> on tower click
 			open side pannel
 			don't draw game-cursor
 			check for upgrades
 			--> close button
 
-	button for next level --> gray if not needed (don't increase level)
+	button for next level --> gray if not needed (don't increase level) [x]
 
 	show numbers: money, dmg/max, level [x]
 
+	button options for texture when is clicked
+	button make textures work
+
 	bigger textures
 	scaling
+
+	build upgrades [x]
+	--> handel upgrade button + click
+
+	place tower!!!!!!
+
+	add etk types!!!!!!
+	--> add types to attack for tower
+
+	add map format
 */
