@@ -169,20 +169,20 @@ func main() {
 
 	towerList := [](tower){}
 
-	nromalAttackList := []etkType{normal}
+	normalAttackList := []etkType{normal}
 
-	towerList1 := tower_init(vec_init(8.0, 8.0), 5.0, 20.0, 10, 900, "tower.png", nromalAttackList)
-	towerList2 := tower_init(vec_init(11.0, 11.0), 5.0, 20.0, 10, 900, "tower.png", nromalAttackList)
+	towerList1 := tower_init(vec_init(8.0, 8.0), 5.0, 20.0, 10, 900, "tower.png", normalAttackList)
+	towerList2 := tower_init(vec_init(11.0, 11.0), 5.0, 20.0, 10, 900, "tower.png", normalAttackList)
 
 	u1_list := []state{}
-	u1_list = append(u1_list, state_init(1, "", tower_init(vec_init(8.0, 8.0), 5.0, 0.0, 0, 0, "", nromalAttackList)))
-	u1_list = append(u1_list, state_init(1, "range +1", tower_init(vec_init(8.0, 8.0), 6.0, 0.0, 0, 0, "", nromalAttackList)))
-	u1_list = append(u1_list, state_init(1, "range +1", tower_init(vec_init(8.0, 8.0), 7.0, 0.0, 0, 0, "", nromalAttackList)))
+	u1_list = append(u1_list, state_init(1, "", tower_init(vec_init(8.0, 8.0), 5.0, 0.0, 0, 0, "", normalAttackList)))
+	u1_list = append(u1_list, state_init(1, "range +1", tower_init(vec_init(8.0, 8.0), 6.0, 0.0, 0, 0, "", normalAttackList)))
+	u1_list = append(u1_list, state_init(1, "range +1", tower_init(vec_init(8.0, 8.0), 7.0, 0.0, 0, 0, "", normalAttackList)))
 
 	u2_list := []state{}
-	u2_list = append(u2_list, state_init(1, "", tower_init(vec_init(8.0, 8.0), 0.0, 5.0, 0, 0, "", nromalAttackList)))
-	u2_list = append(u2_list, state_init(1, "dmg +1", tower_init(vec_init(8.0, 8.0), 0.0, 6.0, 0, 0, "", nromalAttackList)))
-	u2_list = append(u2_list, state_init(1, "dmg +1", tower_init(vec_init(8.0, 8.0), 0.0, 7.0, 0, 0, "", nromalAttackList)))
+	u2_list = append(u2_list, state_init(1, "", tower_init(vec_init(8.0, 8.0), 0.0, 5.0, 0, 0, "", normalAttackList)))
+	u2_list = append(u2_list, state_init(1, "dmg +1", tower_init(vec_init(8.0, 8.0), 0.0, 6.0, 0, 0, "", normalAttackList)))
+	u2_list = append(u2_list, state_init(1, "dmg +1", tower_init(vec_init(8.0, 8.0), 0.0, 7.0, 0, 0, "", normalAttackList)))
 
 	upgrade1 := upgrade_init(u1_list)
 	upgrade2 := upgrade_init(u2_list)
@@ -469,9 +469,11 @@ TODO:
 	--> show description + price
 
 	place tower!!!!!!
+	--> add tower-presets
+	--> list compt with stats + name + description
 
 	add etk types!!!!!! [x]
-	--> add types to attack for tower
+	--> add types to attack for tower [x]
 
 	add map format
 */

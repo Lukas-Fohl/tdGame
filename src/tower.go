@@ -2,6 +2,7 @@ package main
 
 import (
 	"math"
+	"reflect"
 	"time"
 )
 
@@ -116,6 +117,9 @@ func (towerIn *tower) applyUpgrade(upgradeIn upgrade) {
 	}
 	if upgradeIn.states[upgradeIn.level].tower.texturePath != "" {
 		towerIn.texturePath = upgradeIn.states[upgradeIn.level].tower.texturePath
+	}
+	if !reflect.DeepEqual(upgradeIn.states[upgradeIn.level].tower.typesToAttack, []state{}) {
+		towerIn.typesToAttack = upgradeIn.states[upgradeIn.level].tower.typesToAttack
 	}
 }
 
