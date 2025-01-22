@@ -61,11 +61,39 @@ type towerInfo struct {
 	buttons []button
 }
 
+type buyInfo struct {
+	towers       []tower
+	toPlace      tower
+	show         bool
+	isPlacing    bool
+	buttons      []button
+	displayIndex int
+}
+
+func buyInfo_init(towersIn []tower) buyInfo {
+	return buyInfo{
+		towers:       towersIn,
+		toPlace:      tower_init(vec_init(0, 0), 0.0, 0.0, 0.0, 0, "", []etkType{}),
+		show:         false,
+		isPlacing:    false,
+		buttons:      []button{},
+		displayIndex: 0,
+	}
+}
+
 func towerInfo_init(showIn bool, towerIn *tower) towerInfo {
 	return towerInfo{
 		show:    showIn,
 		tower:   towerIn,
 		buttons: []button{},
+	}
+}
+
+func (buyInfoIn *buyInfo) drawBuyInfo(playIn *play) {
+	buyInfoIn.buttons = []button{}
+	if buyInfoIn.show {
+		//draw list of 5 towers --> base on index
+		//get slice from list index
 	}
 }
 

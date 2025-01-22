@@ -196,8 +196,10 @@ func main() {
 	towerList = append(towerList, towerList2)
 
 	myTowerInfo := towerInfo_init(false, &towerList1)
+	myBuyInfo := buyInfo_init(towerList)
 
-	nextLevelButton := button_init(vec_init(940.0, 580.0), vec_init(120.0, 120.0), "next level", "", rl.Gray)
+	nextLevelButton := button_init(vec_init(760.0, 580.0), vec_init(120.0, 120.0), "next level", "", rl.Gray)
+	buyButton := button_init(vec_init(940.0, 580.0), vec_init(120.0, 120.0), "buy", "", rl.Gray)
 
 	myPath := path_init([]vec2{
 		vec_init(0.0, 0.0),
@@ -279,6 +281,7 @@ func main() {
 
 		(&myTowerInfo).drawTowerInfo(findTexture(textureList, myTowerInfo.tower.texturePath), &myPlay)
 		if rl.IsMouseButtonReleased(rl.MouseButtonLeft) {
+			//check for TowerInfo
 			buttonClicked := false
 			for i := 0; i < len(myTowerInfo.buttons); i++ {
 				buttonRectangle := rl.NewRectangle(float32(myTowerInfo.buttons[i].position.x), float32(myTowerInfo.buttons[i].position.y), float32(myTowerInfo.buttons[i].size.x), float32(myTowerInfo.buttons[i].size.y))
@@ -303,7 +306,9 @@ func main() {
 					myTowerInfo.show = false
 				}
 			}
+			//check for buy
 		}
+		(&myBuyInfo).drawBuyInfo(&myPlay)
 
 		//draw etk
 		for i := 0; i < len(etkList); i++ {
@@ -346,6 +351,8 @@ func main() {
 				hasSpawnWithSameLevel = true
 			}
 		}
+
+		buyButton.draw()
 
 		if !hasSpawnWithSameLevel && len(etkList) == 0 {
 			nextLevelButton.draw()
@@ -471,6 +478,18 @@ TODO:
 	place tower!!!!!!
 	--> add tower-presets
 	--> list compt with stats + name + description
+	draw 5 towres to buy --> up and down button
+	draw buy page where tower info is
+	buy page --> save is placing
+	how to spawn:
+		when button pressed
+		set towerInfo.show = false
+		set isPlacing to true
+		save tower to save
+		check for left click
+			place
+			set place to false
+			remove money
 
 	add etk types!!!!!! [x]
 	--> add types to attack for tower [x]

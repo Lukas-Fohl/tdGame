@@ -35,6 +35,20 @@ func tower_init(positionIn vec2, dmgRangeIn float64, dmgIn float64, priceIn int,
 	}
 }
 
+type towerPreset struct {
+	tower       tower
+	name        string
+	description string
+}
+
+func towerPreset_init(towerIn tower, nameIn string, descriptionIn string) towerPreset {
+	return towerPreset{
+		tower:       towerIn,
+		name:        nameIn,
+		description: descriptionIn,
+	}
+}
+
 func canAttack(towerTypeList []etkType, etkTypeList []etkType) bool {
 	canAttack := true
 	for i := 0; i < len(etkTypeList); i++ {
